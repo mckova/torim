@@ -21,8 +21,8 @@ interface Gap {
 }
 
 /**
- * One day, one column per staff member (the layout salons already use on paper and in
- * the leading booking tools). Bookings are blocks in the person's tint; the assistant's
+ * One day, one column per staff member (the layout salons already use on paper).
+ * Bookings are blocks in the person's tint; the assistant's
  * bookings, likely no-shows and requests waiting for approval are marked on the block.
  * Free hours between bookings are drawn as open slots that can be offered to the waitlist.
  */
@@ -131,7 +131,7 @@ export function DayBoard({
                 return (
                   <button
                     key={b.id}
-                    className={`block ${now ? "now" : ""} ${b.status} ${isToday && e <= nowMin ? "past" : ""}`}
+                    className={`bblock ${now ? "now" : ""} ${b.status} ${isToday && e <= nowMin ? "past" : ""}`}
                     style={{
                       top: y(s) + 2,
                       height: h,
@@ -141,7 +141,7 @@ export function DayBoard({
                     onClick={() => onOpen(b)}
                     aria-label={`${time(b.start)} ${b.customer.name}, ${b.service.name}`}
                   >
-                    <span className="block-row">
+                    <span className="bblock-row">
                       <b>{b.customer.name}</b>
                       {badge}
                     </span>

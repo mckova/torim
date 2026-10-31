@@ -144,7 +144,7 @@ function Wizard({ page, initialService, initialDate }: { page: Page; initialServ
         <div className="stack">
           <h2>With whom?</h2>
           <button className="option" onClick={() => setProvider(null)}>
-            <div className="avatar" style={{ background: "var(--sunset)" }} aria-hidden>
+            <div className="avatar" style={{ background: "var(--sunset-ink)", color: "#fff" }} aria-hidden>
               <Icon name="clock" />
             </div>
             <div className="grow stack tight">
@@ -154,7 +154,7 @@ function Wizard({ page, initialService, initialDate }: { page: Page; initialServ
           </button>
           {offered.map((p) => (
             <button key={p.id} className="option" onClick={() => setProvider(p.id)}>
-              <div className="avatar" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${p.color} 45%, white), ${p.color})` }} aria-hidden>
+              <div className="avatar" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${p.color} 18%, white), color-mix(in srgb, ${p.color} 42%, white))`, color: `color-mix(in srgb, ${p.color} 75%, #2a1530)` }} aria-hidden>
                 {initials(p.name)}
               </div>
               <div className="grow stack tight">

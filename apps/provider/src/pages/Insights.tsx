@@ -85,8 +85,8 @@ export default function Insights() {
           ))}
         </div>
         <div className="row between tiny muted">
-          <span>{days[0]?.[0]}</span>
-          <span>{days[days.length - 1]?.[0]}</span>
+          <span>{days[0] && `${dayShort(days[0][0]).month} ${dayShort(days[0][0]).day}`}</span>
+          <span>{days.length > 0 && `${dayShort(days[days.length - 1][0]).month} ${dayShort(days[days.length - 1][0]).day}`}</span>
         </div>
       </div>
       <div className="grid two">

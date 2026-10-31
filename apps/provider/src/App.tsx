@@ -49,7 +49,7 @@ function UserMenu({ data, onLogout }: { data: Me; onLogout: () => void }) {
   return (
     <div className="user-menu" ref={box}>
       <button className="user-btn" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen(!open)}>
-        <span className="user-dot" style={{ background: `linear-gradient(135deg, #ffc2d6, ${data.me.color})` }} aria-hidden>
+        <span className="user-dot" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${data.me.color} 18%, white), color-mix(in srgb, ${data.me.color} 42%, white))`, color: `color-mix(in srgb, ${data.me.color} 75%, #2a1530)` }} aria-hidden>
           {initials(data.me.name)}
         </span>
         <span className="user-name">{data.me.name.split(" ")[0]}</span>

@@ -32,7 +32,7 @@ export default function Home() {
           {list?.map((b) => (
             <li key={b.id}>
               <Link to={`/b/${b.slug}`}>
-                <span className="biz-mono" style={{ background: `linear-gradient(140deg, color-mix(in srgb, ${b.accent_color} 55%, white), ${b.accent_color})` }} aria-hidden>
+                <span className="biz-mono" style={{ background: `linear-gradient(140deg, color-mix(in srgb, ${b.accent_color} 18%, white), color-mix(in srgb, ${b.accent_color} 42%, white))`, color: `color-mix(in srgb, ${b.accent_color} 75%, #2a1530)` }} aria-hidden>
                   {b.name[0]}
                 </span>
                 <span className="grow">

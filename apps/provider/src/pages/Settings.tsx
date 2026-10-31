@@ -142,7 +142,7 @@ export default function Settings() {
           <div className="grid two">
             {staff.map((p) => (
               <div key={p.id} className="card row" style={{ opacity: p.active ? 1 : 0.55, alignItems: "flex-start" }}>
-                <div className="avatar sm" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${p.color} 35%, white), ${p.color})` }} aria-hidden>
+                <div className="avatar sm" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${p.color} 18%, white), color-mix(in srgb, ${p.color} 42%, white))`, color: `color-mix(in srgb, ${p.color} 75%, #2a1530)` }} aria-hidden>
                   {p.name.slice(0, 1)}
                 </div>
                 <div className="grow stack tight">
@@ -154,7 +154,7 @@ export default function Settings() {
                   <span className="small muted">{p.title || p.email}</span>
                   <div className="row" aria-label="Working days">
                     {ORDER.map((d) => (
-                      <span key={d} className="tiny" style={{ color: p.weekdays.includes(d) ? "var(--ink)" : "#d9c6d0", fontWeight: 600 }}>
+                      <span key={d} className="tiny" style={{ color: p.weekdays.includes(d) ? "var(--ink)" : "var(--muted)", fontWeight: p.weekdays.includes(d) ? 600 : 400 }}>
                         {DAY_SHORT[d]}
                       </span>
                     ))}
