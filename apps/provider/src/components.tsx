@@ -1,20 +1,39 @@
-import { ReactNode, useEffect, useState } from "react";
-import { Booking, STATUS_LABEL, Slot, addDays, dayLong, isoDate, money, phoneDisplay, time, translateError } from "@torim/shared";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { Booking, Icon, STATUS_LABEL, Slot, addDays, dayLong, isoDate, money, phoneDisplay, time, translateError } from "@torim/shared";
 import { api, useMe } from "./api";
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const opener = document.activeElement as HTMLElement | null;
+    const focusables = () => Array.from(box.current?.querySelectorAll<HTMLElement>("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])") ?? []).filter((el) => !el.hasAttribute("disabled"));
+    (focusables()[1] ?? focusables()[0])?.focus();
+    const k = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key !== "Tab") return;
+      const f = focusables();
+      if (!f.length) return;
+      if (e.shiftKey && document.activeElement === f[0]) {
+        e.preventDefault();
+        f[f.length - 1].focus();
+      } else if (!e.shiftKey && document.activeElement === f[f.length - 1]) {
+        e.preventDefault();
+        f[0].focus();
+      }
+    };
     window.addEventListener("keydown", k);
-    return () => window.removeEventListener("keydown", k);
+    return () => {
+      window.removeEventListener("keydown", k);
+      opener?.focus?.();
+    };
   }, [onClose]);
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
+      <div ref={box} className="modal stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}>
         <div className="row between">
           <h2>{title}</h2>
-          <button className="btn ghost sm" onClick={onClose} aria-label="סגירה">
-            ✕
+          <button className="btn ghost sm icon-only" onClick={onClose} aria-label="סגירה">
+            <Icon name="x" />
           </button>
         </div>
         {children}
@@ -80,12 +99,13 @@ export function BookingActions({ b, onChange }: { b: Booking; onChange: (b: Book
   );
 }
 
-export function BookingModal({ b, onClose, onChange }: { b: Booking; onClose: () => void; onChange: (b: Booking) => void }) {
+export function BookingModal({ b, onClose, onChange, onRemind }: { b: Booking; onClose: () => void; onChange: (b: Booking) => void; onRemind?: (b: Booking) => void }) {
+  const upcoming = (b.status === "pending" || b.status === "confirmed") && new Date(b.start) > new Date();
   return (
     <Modal title={b.customer.name} onClose={onClose}>
       <div className="row wrap">
         <span className={`chip ${b.status}`}>{STATUS_LABEL[b.status]}</span>
-        <span className="chip">{b.source === "online" ? "הזמנה אונליין" : b.source === "provider" ? "נקבע ע״י העסק" : b.source === "ai" ? "✨ נקבע ע״י הנציגה החכמה" : b.source}</span>
+        <span className="chip">{b.source === "online" ? "הזמנה אונליין" : b.source === "provider" ? "נקבע ע״י העסק" : b.source === "ai" ? "נקבע ע״י העוזר" : b.source}</span>
       </div>
       <div className="card flat">
         <Line k="שירות" v={b.service.name} />
@@ -96,9 +116,16 @@ export function BookingModal({ b, onClose, onChange }: { b: Booking; onClose: ()
         {b.notes && <Line k="הערות" v={b.notes} />}
         {b.cancellation_reason && <Line k="סיבת ביטול" v={b.cancellation_reason} />}
       </div>
-      <a className="btn ghost sm" style={{ alignSelf: "flex-start" }} href={`https://wa.me/${b.customer.phone.replace("+", "")}`} target="_blank" rel="noreferrer">
-        💬 וואטסאפ ללקוח
-      </a>
+      <div className="row wrap">
+        <a className="btn ghost sm" href={`https://wa.me/${b.customer.phone.replace("+", "")}`} target="_blank" rel="noreferrer">
+          וואטסאפ ללקוח
+        </a>
+        {upcoming && onRemind && (
+          <button className="btn soft sm" onClick={() => onRemind(b)}>
+            תזכורת אישית
+          </button>
+        )}
+      </div>
       <BookingActions b={b} onChange={onChange} />
     </Modal>
   );
@@ -155,8 +182,8 @@ export function NewBookingModal({ onClose, onCreated, date: initialDate }: { onC
       <form className="stack" onSubmit={submit}>
         <div className="grid two">
           <div className="field">
-            <label>שירות</label>
-            <select className="input" value={serviceId} onChange={(e) => setServiceId(Number(e.target.value))}>
+            <label htmlFor="nb-service">שירות</label>
+            <select id="nb-service" className="input" value={serviceId} onChange={(e) => setServiceId(Number(e.target.value))}>
               {services.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -165,8 +192,8 @@ export function NewBookingModal({ onClose, onCreated, date: initialDate }: { onC
             </select>
           </div>
           <div className="field">
-            <label>נותן שירות</label>
-            <select className="input" value={providerId ?? ""} onChange={(e) => setProviderId(Number(e.target.value))}>
+            <label htmlFor="nb-provider">נותן שירות</label>
+            <select id="nb-provider" className="input" value={providerId ?? ""} onChange={(e) => setProviderId(Number(e.target.value))}>
               {providerOptions.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -176,12 +203,12 @@ export function NewBookingModal({ onClose, onCreated, date: initialDate }: { onC
           </div>
         </div>
         <div className="row">
-          <button type="button" className="btn ghost sm" onClick={() => setDate(addDays(date, -1))}>
-            ›
+          <button type="button" className="btn ghost sm icon-only" onClick={() => setDate(addDays(date, -1))} aria-label="יום קודם">
+            <Icon name="arrow" className="flip-rtl" />
           </button>
-          <input type="date" className="input grow" value={date} onChange={(e) => setDate(e.target.value)} />
-          <button type="button" className="btn ghost sm" onClick={() => setDate(addDays(date, 1))}>
-            ‹
+          <input type="date" className="input grow" aria-label="תאריך" value={date} onChange={(e) => setDate(e.target.value)} />
+          <button type="button" className="btn ghost sm icon-only" onClick={() => setDate(addDays(date, 1))} aria-label="יום הבא">
+            <Icon name="arrow" />
           </button>
         </div>
         {!slots ? (
@@ -198,10 +225,10 @@ export function NewBookingModal({ onClose, onCreated, date: initialDate }: { onC
           </div>
         )}
         <div className="grid two">
-          <input className="input" placeholder="שם הלקוח" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} />
-          <input className="input" placeholder="טלפון" dir="ltr" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input className="input" aria-label="שם הלקוח" placeholder="שם הלקוח" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input" aria-label="טלפון" placeholder="טלפון" dir="ltr" inputMode="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
-        <input className="input" placeholder="הערה (לא חובה)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <input className="input" aria-label="הערה" placeholder="הערה (לא חובה)" value={notes} onChange={(e) => setNotes(e.target.value)} />
         <ErrorText error={error} />
         <button className="btn block" disabled={!start}>
           קביעת התור ושליחת אישור ללקוח

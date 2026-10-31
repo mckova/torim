@@ -5,7 +5,24 @@
   "dir": "rtl",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f6f7f9",
+  "background_color": "#f6f6f3",
   "theme_color": "#0f766e",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "התורים שלי",
+      "url": "/me"
+    },
+    {
+      "name": "לבעלי עסקים",
+      "url": "/business"
+    }
+  ],
+  "description": "מערכת תורים עם נציגה חכמה"
 }

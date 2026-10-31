@@ -10,6 +10,7 @@ export interface Business {
   phone: string;
   timezone: string;
   cancel_window_hours: number;
+  slot_step?: number;
   accent_color: string;
 }
 

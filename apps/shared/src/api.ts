@@ -5,6 +5,17 @@ export class ApiError extends Error {
 }
 
 const MESSAGES: Record<string, string> = {
+  "this link name is taken": "הקישור הזה כבר תפוס, נסו אחר.",
+  "email already registered": "האימייל הזה כבר רשום. אפשר להתחבר במקום.",
+  "invalid email": "כתובת האימייל לא תקינה.",
+  "too many requests, try again in a minute": "יותר מדי בקשות, נסו שוב בעוד דקה.",
+  "link name must be 3-40 latin letters, digits or dashes": "קישור: אותיות באנגלית, ספרות ומקפים, 3 עד 40 תווים.",
+  "the owner account cannot be deactivated": "אי אפשר להשבית את חשבון הבעלים.",
+  "a password of at least 8 characters is required": "צריך סיסמה של לפחות 8 תווים.",
+  "owner only": "רק בעל העסק יכול לעשות את זה.",
+  "booking is not upcoming": "התור הזה כבר לא עתידי.",
+  "color must be #rrggbb": "צבע לא תקין.",
+  "AI is busy, try again in a moment": "ה-AI עמוס כרגע, נסו שוב בעוד רגע.",
   "slot is no longer available": "השעה הזו נתפסה הרגע. בחרו שעה אחרת.",
   "booking is not active": "התור כבר אינו פעיל.",
   "wrong or expired code": "הקוד שגוי או שפג תוקפו.",

@@ -21,6 +21,7 @@ def business(b: Business) -> dict:
         "phone": b.phone,
         "timezone": b.timezone,
         "cancel_window_hours": b.cancel_window_hours,
+        "slot_step": b.slot_step,
         "accent_color": b.accent_color,
     }
 

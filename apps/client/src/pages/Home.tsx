@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Business } from "@torim/shared";
 import { api } from "../api";
-import { ErrorBox, Spinner, initials } from "../components";
+import { ErrorBox } from "../components";
 
 export default function Home() {
   const [list, setList] = useState<Business[] | null>(null);
@@ -11,28 +11,43 @@ export default function Home() {
     api.get<Business[]>("/api/businesses").then(setList).catch(setError);
   }, []);
   return (
-    <div className="stack">
-      <section className="hero stack tight">
-        <h1>קובעים תור בשניות</h1>
-        <p className="muted">בוחרים שירות, בוחרים שעה, מקבלים אישור ותזכורת בוואטסאפ. בלי טלפונים ובלי להמתין על הקו.</p>
+    <div className="stack loose">
+      <section className="home-head">
+        <h1>קביעת תור</h1>
+        <p className="ink-2">בוחרים עסק, שירות ושעה. אפשר גם לכתוב לעוזר של העסק במילים שלכם, או להקליט. האישור מגיע בוואטסאפ.</p>
       </section>
-      <h2>עסקים</h2>
-      <ErrorBox error={error} />
-      {!list && !error && <Spinner />}
-      {list?.map((b) => (
-        <Link key={b.id} to={`/b/${b.slug}`} className="option" style={{ color: "inherit" }}>
-          <div className="avatar" style={{ background: b.accent_color }}>
-            {initials(b.name)}
+      <section aria-labelledby="biz-h">
+        <h2 id="biz-h" className="list-title">
+          עסקים
+        </h2>
+        <ErrorBox error={error} />
+        {!list && !error && (
+          <div className="stack tight" aria-hidden>
+            <div className="skeleton" style={{ height: 58 }} />
+            <div className="skeleton" style={{ height: 58 }} />
           </div>
-          <div className="grow stack tight">
-            <b>{b.name}</b>
-            <span className="small muted">
-              {b.category} · {b.address}
-            </span>
-          </div>
-          <span className="muted">‹</span>
-        </Link>
-      ))}
+        )}
+        {list?.length === 0 && <p className="muted">עוד אין עסקים פתוחים להזמנה.</p>}
+        <ul className="biz-list">
+          {list?.map((b) => (
+            <li key={b.id}>
+              <Link to={`/b/${b.slug}`}>
+                <span className="grow">
+                  <b>{b.name}</b>
+                  <span className="small muted">
+                    {b.category}
+                    {b.address && ` · ${b.address}`}
+                  </span>
+                </span>
+                <span className="go small">לקבוע</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <p className="small muted">
+        יש לכם עסק? <Link to="/business">ככה נראה יום עבודה עם TORIM</Link>
+      </p>
     </div>
   );
 }

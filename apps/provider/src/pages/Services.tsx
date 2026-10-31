@@ -30,43 +30,39 @@ export default function Services() {
         <h1>שירותים</h1>
         {isOwner && (
           <button className="btn" onClick={() => setEdit({ ...EMPTY, provider_ids: [data.me.id] })}>
-            + שירות חדש
+            שירות חדש
           </button>
         )}
       </div>
-      <div className="grid two">
+      <ol className="svc-list">
         {data.services.map((s) => (
-          <div key={s.id} className="card stack tight" style={{ opacity: s.active ? 1 : 0.5 }}>
-            <div className="row between">
-              <h3>{s.name}</h3>
-              <b>{money(s.price)}</b>
+          <li key={s.id} className={s.active ? "" : "off"}>
+            <div className="svc-main">
+              <b>{s.name}</b>
+              {s.description && <span className="small muted">{s.description}</span>}
+              <span className="small ink-2">
+                {data.providers
+                  .filter((p) => s.provider_ids.includes(p.id))
+                  .map((p) => p.name)
+                  .join(", ")}
+              </span>
             </div>
-            <span className="small muted">{s.description}</span>
-            <div className="row wrap">
-              <span className="chip">{duration(s.duration)}</span>
-              {s.buffer_after > 0 && <span className="chip">+{s.buffer_after} דק׳ הכנה</span>}
-              {s.capacity > 1 && <span className="chip accent">קבוצה · {s.capacity}</span>}
+            <div className="svc-meta small">
+              <span className="num-sans">{duration(s.duration)}</span>
+              {s.buffer_after > 0 && <span className="muted">+{s.buffer_after} דק׳ הכנה</span>}
+              {s.capacity > 1 && <span className="muted">עד {s.capacity} משתתפים</span>}
               {s.requires_confirmation && <span className="chip pending">דורש אישור</span>}
               {!s.active && <span className="chip cancelled">מושבת</span>}
             </div>
-            <div className="row">
-              {data.providers
-                .filter((p) => s.provider_ids.includes(p.id))
-                .map((p) => (
-                  <span key={p.id} className="tiny row" style={{ gap: 4 }}>
-                    <span className="dot" style={{ background: p.color }} />
-                    {p.name}
-                  </span>
-                ))}
-            </div>
+            <b className="svc-price">{money(s.price)}</b>
             {isOwner && (
-              <button className="btn ghost sm" style={{ alignSelf: "flex-start" }} onClick={() => setEdit(s)}>
+              <button className="btn link sm" onClick={() => setEdit(s)}>
                 עריכה
               </button>
             )}
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
       {edit && (
         <Editor
           value={edit}

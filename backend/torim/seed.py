@@ -64,14 +64,14 @@ def build(db) -> None:
         description="שיעורי פילאטיס בקבוצות קטנות וטיפולי פיזיותרפיה פרטניים.",
         address="הרצל 45, רמת גן",
         phone="03-5559876",
-        accent_color="#7c3aed",
+        accent_color="#7a3e5c",
     )
     db.add_all([barber, studio])
     db.flush()
 
-    gal = Provider(business=barber, name="גל אברהם", title="בעלים, ספר ראשי", email="owner@barber.demo", password_hash=pw, role="owner", color="#0f766e")
-    dana = Provider(business=barber, name="דנה שגיא", title="ספרית וצבע", email="dana@barber.demo", password_hash=pw, color="#db2777")
-    moshe = Provider(business=barber, name="משה לוי", title="ספר", email="moshe@barber.demo", password_hash=pw, color="#2563eb")
+    gal = Provider(business=barber, name="גל אברהם", title="בעלים, ספר ראשי", email="owner@barber.demo", password_hash=pw, role="owner", color="#2f6f62")
+    dana = Provider(business=barber, name="דנה שגיא", title="ספרית וצבע", email="dana@barber.demo", password_hash=pw, color="#9a6a16")
+    moshe = Provider(business=barber, name="משה לוי", title="ספר", email="moshe@barber.demo", password_hash=pw, color="#7a3e5c")
     _hours(gal, SUN_THU, LUNCH)
     _hours(dana, {k: v for k, v in SUN_THU.items() if k != 4}, LUNCH)
     _hours(moshe, {6: ("12:00", "20:00"), 0: ("12:00", "20:00"), 2: ("12:00", "20:00"), 3: ("12:00", "21:00"), 4: ("08:30", "14:00")})
@@ -87,8 +87,8 @@ def build(db) -> None:
     women.providers = [dana]
     color.providers = [dana]
 
-    noa = Provider(business=studio, name="נועה ברק", title="בעלים, מדריכת פילאטיס", email="owner@studio.demo", password_hash=pw, role="owner", color="#7c3aed")
-    yoni = Provider(business=studio, name="יוני כץ", title="פיזיותרפיסט", email="yoni@studio.demo", password_hash=pw, color="#ea580c")
+    noa = Provider(business=studio, name="נועה ברק", title="בעלים, מדריכת פילאטיס", email="owner@studio.demo", password_hash=pw, role="owner", color="#2f6f62")
+    yoni = Provider(business=studio, name="יוני כץ", title="פיזיותרפיסט", email="yoni@studio.demo", password_hash=pw, color="#9b4a2c")
     _hours(noa, {6: ("07:00", "21:00"), 0: ("07:00", "21:00"), 1: ("07:00", "21:00"), 2: ("07:00", "21:00"), 3: ("07:00", "21:00"), 4: ("08:00", "12:00")}, {wd: ("12:00", "16:00") for wd in (6, 0, 1, 2, 3)})
     _hours(yoni, {6: ("08:00", "16:00"), 0: ("08:00", "16:00"), 1: ("12:00", "20:00"), 2: ("08:00", "16:00"), 3: ("12:00", "20:00")})
     pilates = Service(business=studio, name="פילאטיס מכשירים (קבוצה)", duration=55, price=120, buffer_after=5, capacity=6, min_notice=120, description="עד 6 משתתפים")
@@ -124,6 +124,7 @@ def _history(db, biz: Business, rng: random.Random, per_day: int) -> None:
     # some customers are habitually unreliable, so the no-show model has a real signal to learn
     flaky = {c.id: (0.32 if rng.random() < 0.15 else 0.025) for c in pool}
     services = list(biz.services)
+    taken: dict[int, list[tuple[datetime, datetime]]] = {}  # past bookings are not "active", so track them here
     for offset in range(-35, 11):
         day = today + timedelta(days=offset)
         target = per_day if offset < 0 else max(2, per_day - offset)  # the future is still filling up
@@ -140,6 +141,9 @@ def _history(db, biz: Business, rng: random.Random, per_day: int) -> None:
             options = av.slots_for_day(cal, day, rule, as_of, biz.slot_step)
             if offset >= 0:
                 options = [o for o in options if o > now + timedelta(minutes=s.min_notice)]
+            busy = taken.setdefault(p.id, [])
+            span = timedelta(minutes=s.duration + s.buffer_after)
+            options = [o for o in options if all(o + span <= a or o >= b for a, b in busy)]
             if not options:
                 continue
             start = rng.choice(options)
@@ -151,6 +155,8 @@ def _history(db, biz: Business, rng: random.Random, per_day: int) -> None:
                 status = "no_show" if r < p_ns else "cancelled" if r < p_ns + 0.08 else "completed"
             else:
                 status = "pending" if s.requires_confirmation and rng.random() < 0.5 else "confirmed"
+            if status != "cancelled":
+                busy.append((start, start + span))
             db.add(
                 Booking(
                     business_id=biz.id,

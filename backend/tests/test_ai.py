@@ -213,3 +213,34 @@ def test_no_show_model_learns_from_history(client, owner):
     assert r["bookings"] and {"probability", "level", "reasons"} <= set(r["bookings"][0])
     probs = [b["probability"] for b in r["bookings"]]
     assert probs == sorted(probs, reverse=True)
+
+
+def test_copilot_drafts_and_sends_personal_reminder(client, fake, owner):
+    from datetime import date, timedelta
+
+    rows = client.get("/api/pro/bookings", params={"start": date.today().isoformat(), "end": (date.today() + timedelta(days=10)).isoformat(), "status": "confirmed"}, headers=owner).json()
+    bid = rows[0]["id"]
+
+    def step1(messages, kw):
+        assert {"draft_personal_reminder", "send_customer_message", "offer_free_time_to_waitlist"} <= {t["name"] for t in kw["tools"]}
+        return "tool_use", [tool("draft_personal_reminder", booking_id=bid)]
+
+    def step2(messages, kw):
+        draft = last_tool_result(messages)
+        assert draft["source"] == "ai" and "/manage/" in draft["message"]  # link is always appended
+        return "tool_use", [tool("send_customer_message", booking_id=bid, message=draft["message"])]
+
+    def step3(messages, kw):
+        assert last_tool_result(messages)["channel"] == "whatsapp"
+        return "end_turn", [text("שלחתי.")]
+
+    # the draft tool itself calls engine.structured, which consumes one scripted step
+    def structured_step(messages, kw):
+        assert kw["output_config"]["format"]["type"] == "json_schema"
+        return "end_turn", [text('{"message": "היי! מחכים לך מחר 🙂"}')]
+
+    fake([step1, structured_step, step2, step3])
+    r = client.post("/api/pro/copilot", json={"message": "תשלח תזכורת אישית לתור הראשון"}, headers=owner)
+    assert r.json()["reply"] == "שלחתי."
+    outbox = client.get("/api/pro/notifications", headers=owner).json()
+    assert any(n["kind"] == "personal_reminder" and n["body"].startswith("היי! מחכים לך מחר") for n in outbox)

@@ -78,7 +78,8 @@ def test_manage_cancel_and_reschedule(client):
     b = book(client, svc, slots[0]).json()
     view = client.get(f"/api/manage/{b['uid']}", params={"t": "wrong"})
     assert view.status_code == 404
-    new = slots[3]
+    # rescheduling keeps the staff member, so pick a later slot where they are free
+    new = next(s for s in slots[3:] if b["provider"]["id"] in s["provider_ids"])
     r = client.post(f"/api/manage/{b['uid']}/reschedule", json={"t": b["manage_token"], "start": new["start"]})
     assert r.status_code == 200, r.text
     assert r.json()["start"] == new["start"]

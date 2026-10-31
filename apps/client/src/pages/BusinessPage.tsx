@@ -35,26 +35,20 @@ export default function BusinessPage() {
 
   return (
     <div className="stack">
-      <section className="hero stack tight">
-        <div className="row">
-          <div className="avatar" style={{ background: "rgb(255 255 255 / 0.2)" }}>
-            {initials(b.name)}
-          </div>
-          <div className="stack tight">
-            <h1>{b.name}</h1>
-            <span className="small muted">
-              {b.category} · {b.address}
-            </span>
-          </div>
-        </div>
-        {b.description && <p className="small muted">{b.description}</p>}
+      <section className="biz-head">
+        <h1>{b.name}</h1>
+        <span className="small muted">
+          {b.category}
+          {b.address && ` · ${b.address}`}
+        </span>
+        {b.description && <p className="ink-2">{b.description}</p>}
       </section>
       <div className="tabs">
         <button className={tab === "book" ? "on" : ""} onClick={() => setTab("book")}>
           קביעת תור
         </button>
         <button className={tab === "chat" ? "on" : ""} onClick={() => setTab("chat")}>
-          ✨ בצ׳אט
+          לכתוב לעוזר
         </button>
         <button className={tab === "queue" ? "on" : ""} onClick={() => setTab("queue")}>
           תור חי
@@ -121,7 +115,7 @@ function Wizard({ page, initialService, initialDate }: { page: Page; initialServ
       <Steps step={step} total={5} />
       {step > 0 && step < 4 && (
         <button className="btn ghost sm" style={{ alignSelf: "flex-start" }} onClick={back}>
-          › חזרה
+          חזרה
         </button>
       )}
       <ErrorBox error={error} />
@@ -329,8 +323,10 @@ function Done({ booking, business }: { booking: Booking; business: Business }) {
   const manage = `/manage/${booking.uid}?t=${booking.manage_token}`;
   return (
     <div className="stack center">
-      <div style={{ fontSize: "3rem" }}>{pending ? "⏳" : "✅"}</div>
-      <h1>{pending ? "הבקשה נשלחה" : "התור נקבע!"}</h1>
+      <div className={`done-mark ${pending ? "pending" : ""}`} aria-hidden>
+        {pending ? "ממתין לאישור" : "נרשם ביומן"}
+      </div>
+      <h1>{pending ? "הבקשה נשלחה לעסק" : "התור נקבע"}</h1>
       <p className="muted">
         {pending ? "נעדכן אותך בוואטסאפ ברגע שהתור יאושר." : "שלחנו אישור לוואטסאפ, ונזכיר לך יום לפני ושעתיים לפני."}
       </p>
@@ -412,7 +408,7 @@ function Waitlist({
   return (
     <form className="stack" onSubmit={submit}>
       <button type="button" className="btn ghost sm" style={{ alignSelf: "flex-start" }} onClick={onBack}>
-        › חזרה
+        חזרה
       </button>
       <h2>רשימת המתנה</h2>
       <p className="muted small">
@@ -456,11 +452,11 @@ function WalkIn({ page }: { page: Page }) {
       <div className="grid two">
         <div className="card center stack tight">
           <span className="small muted">עכשיו בטיפול</span>
-          <b style={{ fontSize: "2rem" }}>{board?.now_serving.map((t) => t.number).join(", ") || "—"}</b>
+          <b style={{ fontSize: "2rem" }}>{board?.now_serving.map((t) => t.number).join(", ") || "אין"}</b>
         </div>
         <div className="card center stack tight">
           <span className="small muted">ממתינים</span>
-          <b style={{ fontSize: "2rem" }}>{board?.waiting_count ?? "—"}</b>
+          <b style={{ fontSize: "2rem" }}>{board?.waiting_count ?? "0"}</b>
         </div>
       </div>
       <form className="card stack" onSubmit={take}>

@@ -15,6 +15,17 @@ function sundayOf(iso: string) {
 const minutes = (iso: string) => +iso.slice(11, 13) * 60 + +iso.slice(14, 16);
 
 /** Assign side-by-side lanes to overlapping events in one day column. */
+/** Each staff member gets a fixed lane in the day column, so a barber's day reads top to bottom. */
+function staffLanes(events: Booking[], staff: number[]) {
+  const out = new Map<number, { lane: number; of: number }>();
+  const P = Math.max(1, staff.length);
+  staff.forEach((pid, pi) => {
+    const own = lanes(events.filter((e) => e.provider.id === pid));
+    for (const [id, l] of own) out.set(id, { lane: pi * l.of + l.lane, of: P * l.of });
+  });
+  return out;
+}
+
 function lanes(events: Booking[]) {
   const sorted = [...events].sort((a, b) => a.start.localeCompare(b.start));
   const out = new Map<number, { lane: number; of: number }>();
@@ -57,6 +68,7 @@ export default function Calendar() {
   }
   useEffect(load, [weekStart]);
 
+  const staffShown = data.providers.filter((p) => !hidden.has(p.id)).map((p) => p.id);
   const visible = rows.filter((b) => !hidden.has(b.provider.id) && (showCancelled || (b.status !== "cancelled" && b.status !== "no_show")));
   const byDay = useMemo(() => {
     const m = new Map<string, Booking[]>();
@@ -73,16 +85,16 @@ export default function Calendar() {
         <h1>יומן</h1>
         <div className="row wrap">
           <button className="btn ghost sm" onClick={() => setWeekStart(addDays(weekStart, -7))}>
-            › שבוע קודם
+            שבוע קודם
           </button>
           <button className="btn ghost sm" onClick={() => setWeekStart(sundayOf(isoDate()))}>
             השבוע
           </button>
           <button className="btn ghost sm" onClick={() => setWeekStart(addDays(weekStart, 7))}>
-            שבוע הבא ‹
+            שבוע הבא
           </button>
           <button className="btn sm" onClick={() => setCreating(today)}>
-            + תור חדש
+            תור חדש
           </button>
         </div>
       </div>
@@ -127,29 +139,30 @@ export default function Calendar() {
         </div>
         {days.map((d) => {
           const evs = byDay.get(d) ?? [];
-          const lane = lanes(evs);
+          const lane = staffLanes(evs, staffShown);
           return (
             <div key={d} className="col" onDoubleClick={() => setCreating(d)}>
               {Array.from({ length: TO - FROM }, (_, i) => (
                 <div key={i} className="cell" />
               ))}
               {d === today && nowMin > FROM * 60 && nowMin < TO * 60 && (
-                <div style={{ position: "absolute", insetInline: 0, top: ((nowMin - FROM * 60) / 60) * ROW, height: 2, background: "var(--danger)", zIndex: 1 }} />
+                <div style={{ position: "absolute", insetInline: 0, top: ((nowMin - FROM * 60) / 60) * ROW, height: 1, background: "var(--redpen)", zIndex: 1 }} />
               )}
               {evs.map((b) => {
                 const top = ((minutes(b.start) - FROM * 60) / 60) * ROW;
                 const h = Math.max(18, ((minutes(b.end) - minutes(b.start)) / 60) * ROW - 2);
-                const l = lane.get(b.id)!;
+                const l = lane.get(b.id) ?? { lane: 0, of: 1 };
                 const width = 100 / l.of;
                 return (
                   <div
                     key={b.id}
-                    className={`ev ${b.status}`}
+                    className={`ev ${b.status} ${b.source === "ai" ? "ai" : ""}`}
                     title={`${b.customer.name} · ${b.service.name}`}
                     style={{
                       top,
                       height: h,
-                      background: b.provider.color,
+                      borderInlineStartColor: b.provider.color,
+                      background: `color-mix(in srgb, ${b.provider.color} 9%, var(--sheet))`,
                       insetInlineStart: `calc(${l.lane * width}% + 2px)`,
                       width: `calc(${width}% - 4px)`,
                     }}
@@ -164,7 +177,7 @@ export default function Calendar() {
           );
         })}
       </div>
-      <p className="tiny muted">לחיצה כפולה על יום פותחת תור חדש. פסים אלכסוניים = ממתין לאישור.</p>
+      <p className="tiny muted">לחיצה כפולה על יום פותחת תור חדש. מסגרת מקווקוות: ממתין לאישור. שם בכחול: נקבע ע״י העוזר.</p>
       {open && (
         <BookingModal
           b={open}

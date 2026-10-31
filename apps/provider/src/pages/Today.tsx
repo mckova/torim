@@ -1,8 +1,18 @@
 import { Fragment, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Booking, STATUS_LABEL, addDays, dayLong, isoDate, money, phoneDisplay, time } from "@torim/shared";
+import { Booking, Icon, STATUS_LABEL, addDays, isoDate, money, time } from "@torim/shared";
 import { api, useMe } from "../api";
 import { BookingActions, BookingModal, NewBookingModal, useToast } from "../components";
+import { MarginNotes, ReminderModal } from "../ai";
+
+const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
+function greeting(name: string) {
+  const h = new Date().getHours();
+  const first = name.split(" ")[0];
+  if (h < 12) return `בוקר טוב, ${first}`;
+  if (h < 17) return `צהריים טובים, ${first}`;
+  return `ערב טוב, ${first}`;
+}
 
 export default function Today() {
   const { data } = useMe();
@@ -12,6 +22,7 @@ export default function Today() {
   const [providerId, setProviderId] = useState<number | "">("");
   const [open, setOpen] = useState<Booking | null>(null);
   const [creating, setCreating] = useState(false);
+  const [remind, setRemind] = useState<Booking | null>(null);
   const [toast, show] = useToast();
   const [risk, setRisk] = useState<Record<number, { level: string; probability: number; reasons: string[] }>>({});
 
@@ -31,132 +42,194 @@ export default function Today() {
     show(`עודכן: ${STATUS_LABEL[b.status]}`);
   }
 
+  async function bookingById(id: number) {
+    const found = rows?.find((b) => b.id === id) ?? pending.find((b) => b.id === id);
+    if (found) return found;
+    const list = await api.get<Booking[]>("/api/pro/bookings", { start: isoDate(), end: addDays(isoDate(), 2) });
+    return list.find((b) => b.id === id) ?? null;
+  }
+
   const active = rows?.filter((b) => b.status !== "cancelled") ?? [];
   const expected = active.reduce((s, b) => s + b.price, 0);
   const done = active.filter((b) => b.status === "completed").length;
   const now = new Date().toISOString();
   const isToday = day === isoDate();
+  const d = new Date(day + "T12:00:00");
   let nowShown = false;
 
   return (
-    <div className="stack">
-      <div className="page-head">
-        <div>
-          <h1>{isToday ? `בוקר טוב, ${data.me.name.split(" ")[0]}` : dayLong(day + "T12:00:00")}</h1>
-          <span className="muted small">{isToday ? dayLong(day + "T12:00:00") : ""}</span>
+    <div>
+      <header className="today-head">
+        <div className="today-date" aria-hidden>
+          {String(d.getDate()).padStart(2, "0")}.{String(d.getMonth() + 1).padStart(2, "0")}
         </div>
-        <div className="row wrap">
-          <button className="btn ghost sm" onClick={() => setDay(addDays(day, -1))}>
-            › אתמול
+        <div className="today-title">
+          <h1>{isToday ? greeting(data.me.name) : `יום ${DAY_NAMES[d.getDay()]}`}</h1>
+          <p className="today-summary">
+            {isToday ? `יום ${DAY_NAMES[d.getDay()]}. ` : ""}
+            {active.length ? (
+              <>
+                <b>{active.length}</b> תורים, <b>{done}</b> הושלמו, <b>{money(expected)}</b> צפוי
+                {pending.length > 0 && (
+                  <>
+                    {" "}· <b>{pending.length}</b> מחכים לאישור
+                  </>
+                )}
+              </>
+            ) : (
+              "אין תורים ביום הזה"
+            )}
+          </p>
+        </div>
+        <div className="today-nav">
+          <button className="btn ghost sm icon-only" onClick={() => setDay(addDays(day, -1))} aria-label="היום הקודם">
+            <Icon name="arrow" className="flip-rtl" />
           </button>
           {!isToday && (
             <button className="btn ghost sm" onClick={() => setDay(isoDate())}>
               היום
             </button>
           )}
-          <button className="btn ghost sm" onClick={() => setDay(addDays(day, 1))}>
-            מחר ‹
+          <button className="btn ghost sm icon-only" onClick={() => setDay(addDays(day, 1))} aria-label="היום הבא">
+            <Icon name="arrow" />
           </button>
           <button className="btn sm" onClick={() => setCreating(true)}>
-            + תור חדש
+            תור חדש
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="grid kpi">
-        <div className="card kpi-card">
-          <div className="value">{active.length}</div>
-          <div className="label">תורים {isToday ? "היום" : "ביום הזה"}</div>
-        </div>
-        <div className="card kpi-card">
-          <div className="value">
-            {done}/{active.length}
-          </div>
-          <div className="label">הושלמו</div>
-        </div>
-        <div className="card kpi-card">
-          <div className="value">{money(expected)}</div>
-          <div className="label">הכנסה צפויה</div>
-        </div>
-        <Link to="/calendar" className="card kpi-card" style={{ color: "inherit" }}>
-          <div className="value" style={{ color: pending.length ? "var(--warn)" : undefined }}>
-            {pending.length}
-          </div>
-          <div className="label">בקשות ממתינות לאישור</div>
-        </Link>
-      </div>
-
-      {pending.length > 0 && (
-        <div className="card stack" style={{ borderColor: "#fde68a" }}>
-          <h2>⏳ ממתינים לאישור שלך</h2>
-          {pending.slice(0, 5).map((b) => (
-            <div key={b.id} className="row between wrap" style={{ borderBottom: "1px solid #f3f4f6", paddingBottom: "0.5rem" }}>
-              <div className="stack tight">
-                <b>
-                  {b.customer.name} · {b.service.name}
-                </b>
-                <span className="small muted">
-                  {dayLong(b.start)} {time(b.start)} · {b.provider.name}
-                </span>
-              </div>
-              <BookingActions b={b} onChange={changed} />
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="row between">
-        <h2>סדר היום</h2>
-        {data.me.role === "owner" && (
-          <select className="input" style={{ width: "auto" }} value={providerId} onChange={(e) => setProviderId(e.target.value ? Number(e.target.value) : "")}>
-            <option value="">כל הצוות</option>
-            {data.providers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
-      {!rows ? (
-        <div className="spinner" />
-      ) : rows.length === 0 ? (
-        <div className="card empty">אין תורים ביום הזה. זמן טוב לקפה ☕</div>
-      ) : (
-        <div className="stack tight">
-          {rows.map((b) => {
-            const showNow = isToday && !nowShown && b.start > now;
-            if (showNow) nowShown = true;
-            return (
-              <Fragment key={b.id}>
-                {showNow && <div className="now-line">עכשיו {time(now)}</div>}
-                <div className={`agenda-item ${b.end < now ? "past" : ""}`} onClick={() => setOpen(b)} style={{ cursor: "pointer" }}>
+      <div className="today-grid">
+        <div>
+          {pending.length > 0 && (
+            <section className="approvals" aria-labelledby="appr-h">
+              <h2 id="appr-h">מחכים לאישור שלך</h2>
+              {pending.slice(0, 5).map((b) => (
+                <div key={b.id} className="approval">
                   <div className="stack tight">
-                    <span className="t">{time(b.start)}</span>
-                    <span className="tiny muted">{time(b.end)}</span>
-                  </div>
-                  <div className="stripe" style={{ background: b.provider.color }} />
-                  <div className="stack tight">
-                    <b>{b.customer.name}</b>
+                    <b>
+                      {b.customer.name}, {b.service.name}
+                    </b>
                     <span className="small muted">
-                      {b.service.name} · {b.provider.name} · <span dir="ltr">{phoneDisplay(b.customer.phone)}</span>
+                      <span className="num">{time(b.start)}</span> · {new Date(b.start).toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "numeric" })} · {b.provider.name}
                     </span>
                   </div>
-                  <div className="stack tight" style={{ alignItems: "flex-end" }}>
-                    <span className={`chip ${b.status}`}>{STATUS_LABEL[b.status]}</span>
-                    {risk[b.id] && risk[b.id].level !== "low" && (
-                      <span className={`risk ${risk[b.id].level}`} title={risk[b.id].reasons.join(", ")}>
-                        ✨ סיכון אי-הגעה {Math.round(risk[b.id].probability * 100)}%
-                      </span>
-                    )}
-                  </div>
+                  <BookingActions b={b} onChange={changed} />
                 </div>
-              </Fragment>
-            );
-          })}
+              ))}
+            </section>
+          )}
+
+          <section className="ledger" aria-labelledby="ledger-h">
+            <div className="ledger-tools">
+              <h2 id="ledger-h">סדר היום</h2>
+              {data.me.role === "owner" && data.providers.length > 1 && (
+                <select className="input" style={{ width: "auto" }} aria-label="סינון לפי איש צוות" value={providerId} onChange={(e) => setProviderId(e.target.value ? Number(e.target.value) : "")}>
+                  <option value="">כל הצוות</option>
+                  {data.providers.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+            {!rows ? (
+              <div className="stack tight" aria-hidden>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton" style={{ height: 56 }} />
+                ))}
+              </div>
+            ) : rows.length === 0 ? (
+              <div className="ledger-empty">
+                <span>הדף של היום ריק.</span>
+                <button className="btn ghost sm" onClick={() => setCreating(true)}>
+                  רישום תור
+                </button>
+              </div>
+            ) : (
+              rows.map((b) => {
+                const showNow = isToday && !nowShown && b.start > now;
+                if (showNow) nowShown = true;
+                const r = risk[b.id];
+                return (
+                  <Fragment key={b.id}>
+                    {showNow && (
+                      <div className="ledger-now" aria-label={`עכשיו ${time(now)}`}>
+                        {time(now)}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className={`ledger-row ${b.end < now ? "past" : ""} ${b.source === "ai" ? "ai" : ""} ${b.status}`}
+                      onClick={() => setOpen(b)}
+                    >
+                      <span className="t">
+                        {time(b.start)}
+                        <small>{time(b.end)}</small>
+                      </span>
+                      <span className="who">
+                        <b>{b.customer.name}</b>
+                        <span>
+                          {b.service.name}
+                          {data.providers.length > 1 && (
+                            <>
+                              {" · "}
+                              <span className="staff">
+                                <span className="dot" style={{ background: b.provider.color }} />
+                                {b.provider.name}
+                              </span>
+                            </>
+                          )}
+                          {b.source === "ai" && <span className="by-ai"> · נקבע ע״י העוזר</span>}
+                        </span>
+                      </span>
+                      <span className="side">
+                        {b.status !== "confirmed" && <span className={`chip ${b.status}`}>{STATUS_LABEL[b.status]}</span>}
+                        {r && r.level !== "low" && (
+                          <span className={`risk ${r.level}`} title={r.reasons.join(", ")}>
+                            {Math.round(r.probability * 100)}% אי-הגעה
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  </Fragment>
+                );
+              })
+            )}
+          </section>
         </div>
+
+        {isToday && (
+          <MarginNotes
+            onChanged={load}
+            onOpenBooking={(id) => bookingById(id).then((b) => b && setOpen(b))}
+            onRemind={(id) => bookingById(id).then((b) => b && setRemind(b))}
+          />
+        )}
+      </div>
+
+      {open && (
+        <BookingModal
+          b={open}
+          onClose={() => setOpen(null)}
+          onChange={changed}
+          onRemind={(b) => {
+            setOpen(null);
+            setRemind(b);
+          }}
+        />
       )}
-      {open && <BookingModal b={open} onClose={() => setOpen(null)} onChange={changed} />}
+      {remind && (
+        <ReminderModal
+          booking={remind}
+          onClose={() => setRemind(null)}
+          onSent={() => {
+            setRemind(null);
+            show("התזכורת נשלחה בוואטסאפ");
+          }}
+        />
+      )}
       {creating && (
         <NewBookingModal
           date={day}
@@ -164,7 +237,7 @@ export default function Today() {
           onCreated={() => {
             setCreating(false);
             load();
-            show("התור נקבע ונשלח אישור ללקוח");
+            show("התור נרשם ונשלח אישור ללקוח");
           }}
         />
       )}

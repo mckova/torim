@@ -380,6 +380,40 @@ def _offer_freed_slot(db: Session, b: Booking, freed_start: datetime | None = No
         )
 
 
+
+def offer_free_time(db: Session, business: Business, day: date, provider_ids: list[int] | None = None) -> int:
+    """Tell waitlisted customers for `day` about time that is still free (up to 3 per service)."""
+    sent = 0
+    by_service: dict[int, int] = {}
+    entries = db.scalars(
+        select(WaitlistEntry)
+        .where(WaitlistEntry.business_id == business.id, WaitlistEntry.date == day, WaitlistEntry.status == "waiting")
+        .order_by(WaitlistEntry.created_at)
+    ).all()
+    free_cache: dict[tuple[int, int | None], bool] = {}
+    for e in entries:
+        pid = e.provider_id
+        if provider_ids is not None and pid is not None and pid not in provider_ids:
+            continue
+        key = (e.service_id, pid)
+        if key not in free_cache:
+            free_cache[key] = bool(slots(db, e.service, day, pid))
+        if not free_cache[key] or by_service.get(e.service_id, 0) >= 3:
+            continue
+        by_service[e.service_id] = by_service.get(e.service_id, 0) + 1
+        e.status, e.notified_at = "notified", now_utc()
+        nt.notify_text(
+            db,
+            business.id,
+            e.customer.phone,
+            "waitlist_offer",
+            f"שלום {e.customer.name}, יש מקום פנוי ל{e.service.name} בתאריך {day.strftime('%d/%m')}. "
+            f"מי שמזמין ראשון מקבל: {nt.PUBLIC_URL}/b/{business.slug}?service={e.service_id}&date={day}",
+        )
+        sent += 1
+    db.commit()
+    return sent
+
 def _mark_waitlist_booked(db: Session, b: Booking) -> None:
     tz = ZoneInfo(b.provider.business.timezone)
     for e in db.scalars(

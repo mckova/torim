@@ -14,7 +14,7 @@ from .. import booking as bk
 from ..ai import copilot as cp
 from ..ai import engine
 from ..ai import receptionist as rc
-from ..ai import risk
+from ..ai import briefing, risk
 from ..auth import ProviderAuth, read_token
 from ..db import get_db
 from ..models import Booking, Business, Provider
@@ -134,3 +134,52 @@ def no_show_risk(start: date | None = None, days: int = 7, claims: dict = Provid
         "model": {"trained_on": m.trained_on, "base_rate": round(m.base_rate, 3)},
         "bookings": [{**r, "start": local_iso(r["start"], b.timezone)} for r in rows],
     }
+
+
+# ---------------------------------------------------------------- briefing & personal reminders
+class ReminderIn(BaseModel):
+    message: str = Field(min_length=5, max_length=1000)
+
+
+def _pro(claims: dict, db: Session):
+    from .provider import Ctx
+
+    return Ctx(db, claims)
+
+
+@router.get("/pro/briefing")
+def morning_briefing(refresh: bool = False, claims: dict = ProviderAuth, db: Session = Depends(get_db)):
+    """Prioritized "what matters today" list. Claude writes it; rules fill in without a key."""
+    c = _pro(claims, db)
+    try:
+        return briefing.briefing(db, c.me, refresh=refresh)
+    except Exception as exc:
+        _ai_error(exc)
+
+
+@router.post("/pro/bookings/{booking_id}/reminder/draft")
+def reminder_draft(booking_id: int, claims: dict = ProviderAuth, db: Session = Depends(get_db)):
+    c = _pro(claims, db)
+    b = c.booking(booking_id)
+    if b.status not in ("pending", "confirmed"):
+        raise HTTPException(422, "booking is not upcoming")
+    try:
+        return briefing.reminder_draft(db, b)
+    except Exception as exc:
+        _ai_error(exc)
+
+
+@router.post("/pro/bookings/{booking_id}/reminder/send")
+def reminder_send(booking_id: int, body: ReminderIn, claims: dict = ProviderAuth, db: Session = Depends(get_db)):
+    c = _pro(claims, db)
+    b = c.booking(booking_id)
+    notify_text(db, b.business_id, b.customer.phone, "personal_reminder", body.message.strip())
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/pro/waitlist/offer-today")
+def offer_today(claims: dict = ProviderAuth, db: Session = Depends(get_db)):
+    c = _pro(claims, db)
+    ids = None if c.is_owner else [c.me.id]
+    return {"sent": bk.offer_free_time(db, c.business, bk.today(c.business), ids)}

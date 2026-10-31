@@ -61,7 +61,7 @@ export default function Customers() {
                   <td>{r.no_shows}</td>
                   <td>{r.cancellations}</td>
                   <td>{money(r.spent)}</td>
-                  <td className="small muted">{r.last_visit ? dayLong(r.last_visit) : "—"}</td>
+                  <td className="small muted">{r.last_visit ? dayLong(r.last_visit) : "עוד לא ביקר"}</td>
                 </tr>
               ))}
             </tbody>

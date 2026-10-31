@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api";
 import { translateError } from "@torim/shared";
 
@@ -29,35 +30,38 @@ export default function Login({ onLogin, error }: { onLogin: (token: string) => 
 
   return (
     <div className="login-wrap">
-      <form className="card pad-lg stack" style={{ width: "min(400px, 100%)" }} onSubmit={submit}>
-        <div className="row">
-          <img src="/pro/icon.svg" width={36} alt="" />
-          <div>
-            <h1>TORIM Pro</h1>
-            <span className="small muted">ממשק לנותני שירות</span>
-          </div>
+      <form className="login-card" onSubmit={submit}>
+        <div className="stack tight" style={{ paddingBottom: "0.75rem", borderBottom: "2px solid var(--ink)" }}>
+          <span className="small"><b style={{ letterSpacing: "0.06em" }}>TORIM</b> · לעסק</span>
+          <h1>כניסה ליומן</h1>
         </div>
         <div className="field">
-          <label>אימייל</label>
-          <input className="input" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <label htmlFor="email">אימייל</label>
+          <input id="email" className="input" dir="ltr" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="field">
-          <label>סיסמה</label>
-          <input className="input" dir="ltr" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <label htmlFor="password">סיסמה</label>
+          <input id="password" className="input" dir="ltr" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
-        {err && <div className="alert error">{err}</div>}
+        {err && <div className="alert error" role="alert">{err}</div>}
         <button className="btn block" disabled={busy}>
           כניסה
         </button>
         <div className="stack tight">
-          <span className="tiny muted">משתמשי הדגמה (סיסמה demo1234):</span>
+          <span className="tiny muted">חשבונות הדגמה, הסיסמה לכולם demo1234</span>
           <div className="row wrap">
             {DEMO.map((d) => (
-              <button type="button" key={d.email} className="chip" style={{ border: 0, cursor: "pointer" }} onClick={() => setEmail(d.email)}>
+              <button type="button" key={d.email} className="chip" onClick={() => setEmail(d.email)}>
                 {d.label}
               </button>
             ))}
           </div>
+        </div>
+        <div className="row between" style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.9rem" }}>
+          <span className="small muted">עדיין אין לכם חשבון?</span>
+          <Link to="/signup" className="small">
+            פתיחת יומן לעסק חדש
+          </Link>
         </div>
       </form>
     </div>

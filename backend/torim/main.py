@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import notifications
-from .api import ai, provider, public
+from .api import ai, business, provider, public
 from .db import Base, SessionLocal, engine
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
@@ -51,6 +51,7 @@ app.add_middleware(
 app.include_router(public.router)
 app.include_router(provider.router)
 app.include_router(ai.router)
+app.include_router(business.router)
 
 
 @app.get("/api/health")

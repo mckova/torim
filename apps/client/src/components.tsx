@@ -14,10 +14,10 @@ export function ErrorBox({ error }: { error: unknown }) {
 export function useAccent(color?: string) {
   useEffect(() => {
     if (!color) return;
-    document.documentElement.style.setProperty("--accent", color);
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
+    // The business colour marks the business (its monogram), not the interface.
+    document.documentElement.style.setProperty("--brand", color);
     return () => {
-      document.documentElement.style.removeProperty("--accent");
+      document.documentElement.style.removeProperty("--brand");
     };
   }, [color]);
 }

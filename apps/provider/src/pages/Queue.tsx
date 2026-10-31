@@ -34,14 +34,14 @@ export default function Queue() {
     <div className="stack">
       <div className="page-head">
         <div>
-          <h1>תור חי (Walk-in)</h1>
+          <h1>תור חי</h1>
           <span className="small muted">
             לקוחות שהגיעו בלי תור לוקחים מספר מהטלפון.{" "}
             {data.avg_minutes ? `זמן טיפול ממוצע היום: ${Math.round(data.avg_minutes)} דק׳.` : ""}
           </span>
         </div>
         <button className="btn" disabled={!waiting.length} onClick={() => act(api.post("/api/pro/queue/call-next"), "הלקוח הבא נקרא ונשלחה לו הודעה")}>
-          📣 קריאה לבא בתור
+          לקרוא לבא בתור
         </button>
       </div>
 
@@ -85,7 +85,7 @@ export default function Queue() {
               <div className="num">{t.number}</div>
               <b>{t.name}</b>
               <span className="small muted">{t.service.name}</span>
-              <span className="tiny muted">מקום {t.position} · ~{t.eta_minutes ?? 0} דק׳</span>
+              <span className="tiny muted">{t.position === 1 ? "הבא בתור" : `מקום ${t.position}, בעוד כ-${t.eta_minutes ?? 0} דק׳`}</span>
             </div>
           ))}
         </div>

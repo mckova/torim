@@ -163,3 +163,37 @@ def run_turn(
         messages.append({"role": "user", "content": results})
 
     return TurnResult("מצטערים, לא הצלחתי לסיים את הבקשה. נסו שוב או פנו לבית העסק.", messages, actions, calls)
+
+
+def structured(*, system: str, user_text: str, schema: dict, effort: str = "medium", max_tokens: int = 8000) -> dict:
+    """One-shot call whose answer is guaranteed to match `schema` (structured outputs).
+
+    Used for generation tasks that feed straight into the UI or the database,
+    such as the business setup proposal, the morning briefing and personal
+    reminders, where free text would have to be parsed.
+    """
+    client = get_client()
+    if client is None:
+        raise AIUnavailable("ANTHROPIC_API_KEY is not configured")
+    response = client.beta.messages.create(
+        model=MODEL,
+        max_tokens=max_tokens,
+        system=system,
+        messages=[{"role": "user", "content": user_text}],
+        thinking={"type": "adaptive"},
+        output_config={"effort": effort, "format": {"type": "json_schema", "schema": schema}},
+        cache_control={"type": "ephemeral"},
+        betas=[FALLBACK_BETA],
+        fallbacks="default",
+    )
+    if response.stop_reason == "refusal":
+        raise AIUnavailable("the model declined this request")
+    text = next((b.text for b in response.content if getattr(b, "type", None) == "text"), None)
+    if text is None:
+        raise AIUnavailable("empty AI response")
+    return json.loads(text)
+
+
+def obj(properties: dict, required: list[str] | None = None) -> dict:
+    """JSON-schema object helper for structured outputs (all fields required, closed)."""
+    return {"type": "object", "properties": properties, "required": required or list(properties), "additionalProperties": False}

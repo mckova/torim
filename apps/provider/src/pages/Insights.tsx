@@ -59,23 +59,23 @@ export default function Insights() {
           ))}
         </div>
       </div>
-      <div className="grid kpi">
+      <dl className="kpi-line">
         <Kpi v={money(s.revenue)} l="הכנסות (הושלמו)" />
         <Kpi v={String(s.bookings)} l="תורים" />
         <Kpi v={pct(s.utilization)} l="ניצולת יומן" />
         <Kpi v={pct(s.no_show_rate)} l="לא הגיעו" warn={s.no_show_rate > 0.05} />
         <Kpi v={pct(s.cancel_rate)} l="ביטולים" />
-        <Kpi v={s.avg_lead_days != null ? `${s.avg_lead_days} ימים` : "—"} l="זמן הזמנה מראש" />
-      </div>
+        <Kpi v={s.avg_lead_days != null ? `${s.avg_lead_days} ימים` : "אין נתון"} l="זמן הזמנה מראש" />
+      </dl>
       {tips(s).length > 0 && (
-        <div className="card stack tight" style={{ background: "var(--accent-soft)", borderColor: "transparent" }}>
-          <h2>💡 המלצות</h2>
-          {tips(s).map((t) => (
-            <p key={t} className="small">
-              • {t}
-            </p>
-          ))}
-        </div>
+        <section className="card stack tight">
+          <h2>מה רואים בנתונים</h2>
+          <ul className="plain-list">
+            {tips(s).map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        </section>
       )}
       <div className="card stack">
         <h2>תורים ליום</h2>
@@ -131,11 +131,9 @@ export default function Insights() {
 
 function Kpi({ v, l, warn }: { v: string; l: string; warn?: boolean }) {
   return (
-    <div className="card kpi-card">
-      <div className="value" style={{ color: warn ? "var(--warn)" : undefined }}>
-        {v}
-      </div>
-      <div className="label">{l}</div>
+    <div className="kpi">
+      <dt>{l}</dt>
+      <dd style={{ color: warn ? "var(--redpen)" : undefined }}>{v}</dd>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { translateError } from "@torim/shared";
 import { Me, MeContext, api, getToken, setToken } from "./api";
 import Login from "./pages/Login";
@@ -12,17 +12,20 @@ import Services from "./pages/Services";
 import Insights from "./pages/Insights";
 import Messages from "./pages/Messages";
 import Copilot from "./pages/Copilot";
+import Signup from "./pages/Signup";
+import Settings from "./pages/Settings";
 
-const NAV = [
-  { to: "/", label: "היום", icon: "☀️", end: true },
-  { to: "/copilot", label: "עוזר AI", icon: "✨" },
-  { to: "/calendar", label: "יומן", icon: "📅" },
-  { to: "/queue", label: "תור חי", icon: "🎟️" },
-  { to: "/customers", label: "לקוחות", icon: "👥" },
-  { to: "/schedule", label: "שעות עבודה", icon: "🕘" },
-  { to: "/services", label: "שירותים", icon: "✂️" },
-  { to: "/insights", label: "תובנות", icon: "📈" },
-  { to: "/messages", label: "הודעות", icon: "💬" },
+const NAV: { to: string; label: string; end?: boolean; owner?: boolean; group?: string }[] = [
+  { to: "/", label: "היום", end: true },
+  { to: "/calendar", label: "יומן" },
+  { to: "/queue", label: "תור חי" },
+  { to: "/copilot", label: "העוזר" },
+  { to: "/customers", label: "לקוחות", group: "העסק" },
+  { to: "/insights", label: "תובנות" },
+  { to: "/messages", label: "הודעות שנשלחו" },
+  { to: "/schedule", label: "שעות עבודה", group: "הגדרות" },
+  { to: "/services", label: "שירותים" },
+  { to: "/settings", label: "העסק והצוות", owner: true },
 ];
 const MOBILE = ["/", "/copilot", "/calendar", "/queue", "/insights"];
 
@@ -31,13 +34,13 @@ export default function App() {
   const [token, setTok] = useState(getToken());
   const [error, setError] = useState<string | null>(null);
 
+  const loc = useLocation();
   const reload = useCallback(() => {
     if (!token) return;
     api
       .get<Me>("/api/pro/me")
       .then((d) => {
         setData(d);
-        document.documentElement.style.setProperty("--accent", d.business.accent_color);
       })
       .catch((e) => {
         setError(translateError(e));
@@ -47,14 +50,16 @@ export default function App() {
   }, [token]);
   useEffect(reload, [reload]);
 
+  const login = (t: string) => {
+    setToken(t);
+    setTok(t);
+    setError(null);
+  };
+  if (!token && loc.pathname.startsWith("/signup")) return <Signup onDone={login} />;
   if (!token)
     return (
       <Login
-        onLogin={(t) => {
-          setToken(t);
-          setTok(t);
-          setError(null);
-        }}
+        onLogin={login}
         error={error}
       />
     );
@@ -65,31 +70,28 @@ export default function App() {
       <div className="layout">
         <aside className="sidebar">
           <div className="brand">
-            <img src="/pro/icon.svg" alt="" /> TORIM Pro
+            <b>TORIM</b>
+            <span>לעסק</span>
           </div>
-          <div className="small" style={{ color: "#94a3b8", padding: "0 0.75rem 0.75rem" }}>
-            {data.business.name}
-          </div>
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end}>
-              <span>{n.icon}</span>
-              {n.label}
-            </NavLink>
-          ))}
-          <div className="me stack tight">
+          <div className="biz">{data.business.name}</div>
+          <nav aria-label="ניווט ראשי">
+            {NAV.filter((n) => !n.owner || data.me.role === "owner").map((n) => (
+              <Fragment key={n.to}>
+                {n.group && <div className="group">{n.group}</div>}
+                <NavLink to={n.to} end={n.end} className={n.to === "/copilot" ? "ai-link" : undefined}>
+                  {n.label}
+                </NavLink>
+              </Fragment>
+            ))}
+          </nav>
+          <div className="me">
             <b>{data.me.name}</b>
-            <span style={{ color: "#94a3b8" }}>{data.me.role === "owner" ? "בעלים" : data.me.title}</span>
-            <a
-              href={`/b/${data.business.slug}`}
-              target="_blank"
-              rel="noreferrer"
-              style={{ padding: 0, color: "#5eead4" }}
-            >
-              לדף ההזמנות של העסק ↗
+            <span className="muted">{data.me.role === "owner" ? "בעלים" : data.me.title}</span>
+            <a href={`/b/${data.business.slug}`} target="_blank" rel="noreferrer">
+              דף ההזמנות של העסק
             </a>
             <button
-              className="btn ghost sm"
-              style={{ color: "#e5e7eb", borderColor: "#374151", marginTop: "0.5rem" }}
+              className="btn ghost sm logout"
               onClick={() => {
                 setToken(null);
                 setTok(null);
@@ -111,13 +113,13 @@ export default function App() {
             <Route path="/insights" element={<Insights />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/copilot" element={<Copilot />} />
+            <Route path="/settings" element={data.me.role === "owner" ? <Settings /> : <Navigate to="/" />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
-        <nav className="mobile-nav">
+        <nav className="mobile-nav" aria-label="ניווט">
           {NAV.filter((n) => MOBILE.includes(n.to)).map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end}>
-              <span style={{ fontSize: "1.2rem" }}>{n.icon}</span>
               {n.label}
             </NavLink>
           ))}

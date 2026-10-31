@@ -1,41 +1,56 @@
-# TORIM: AI-native appointment booking and queue management
+# TORIM: appointment book with an assistant that writes in it
 
-An AI-native, full-stack booking system for small service businesses (barbers, clinics,
-studios), with **two apps**:
+TORIM is a full-stack booking system for small service businesses (barbers,
+clinics, studios), in Hebrew, built around one idea: an assistant that answers
+customers and keeps the book, while the owner can always see what it did.
+Anything the assistant wrote, a booking, a note, a drafted message, is shown in
+blue. Everything else is written by people.
+
+Two apps share one API:
 
 - **Client app** (mobile-first PWA): pick a service, a staff member or "first
-  available", a day and a time, and book in under a minute. Manage, reschedule
-  or cancel from a link; join a waitlist when a day is full; take a live
-  number for walk-ins.
-- **Provider app** (TORIM Pro, desktop + mobile PWA): today's agenda,
-  weekly calendar, approvals, walk-in queue control, customer history,
-  working hours / days off / vacations, service settings, business insights
-  and the automated WhatsApp message log.
+  available", a day and a time, and book in under a minute. Or write to the
+  business's assistant in plain Hebrew, by keyboard or by voice. Manage,
+  reschedule or cancel from a link, join a waitlist, take a live number for walk-ins.
+- **Provider app** (desktop + mobile PWA): today's page with the assistant's
+  margin notes, a week calendar with a lane per staff member, approvals, walk-in
+  queue, customers, hours, services, staff, insights and the message log.
 
-Hebrew, right-to-left, Israeli week (Sunday first), `Asia/Jerusalem` with
-correct daylight-saving handling.
+Right-to-left, Israeli week (Sunday first), `Asia/Jerusalem` with correct
+daylight-saving handling. Phone numbers instead of email, WhatsApp instead of
+inboxes, walk-ins next to appointments.
 
-Designed for how local service businesses actually work: phone numbers
-instead of email, WhatsApp instead of inboxes, walk-ins next to appointments,
-and owners who want numbers they can act on.
+![Public page: a sample day, driven by scroll](docs/screenshots/landing-2-whatsapp.png)
 
-## AI-native
+## What the assistant does
+
+All agents run on `claude-opus-5-5` with adaptive thinking, prompt caching and
+server-side fallback. Structured outputs use strict JSON schemas, and every
+action goes through the same booking engine as the UI.
 
 | | |
 |---|---|
-| ✨ **AI receptionist** | Customers book, move and cancel in a natural Hebrew conversation, on the web chat or WhatsApp/Telegram (generic inbound webhook). A Claude Opus 5.5 agent with booking tools, running through the same engine as the UI, scoped to the verified phone number. |
-| ✨ **Owner copilot** | "Who is likely to no-show this week?", "How did October compare to September?", "Block tomorrow 14:00-16:00": answers from live data and acts in the calendar, within owner/staff permissions. |
-| ✨ **No-show prediction** | Per-business logistic regression on the business's own history, with calibrated probabilities and reasons, shown on the agenda. Works offline. |
+| **Sets up the business** | The owner describes the business in a sentence or two. The assistant writes the services, durations, prices, weekly hours and a public description, which carry straight into signup for review. Falls back to category templates without a key. |
+| **Answers customers** | Books, moves and cancels in a natural Hebrew conversation on the web chat or WhatsApp/Telegram (inbound webhook), scoped to the verified phone number. |
+| **Leaves notes on today's page** | Reads the day (risks, pending approvals, waitlist, free time, walk-ins) and writes a short briefing, each note with one action: draft a reminder, approve, offer free time to the waitlist, open the booking. Rule-based notes without a key. |
+| **Drafts personal reminders** | For a customer likely to miss, it writes a warm WhatsApp message that fits their history. The owner edits and sends; nothing personal goes out unseen. |
+| **Works for the owner** | "Who is likely to no-show this week?", "Block tomorrow 14:00-16:00 and offer the gap to the waitlist": answers from live data and acts in the calendar within owner/staff permissions. |
+| **Predicts no-shows** | Per-business logistic regression on the business's own history, with calibrated probabilities and reasons. Runs without a key. |
 
-The agents need `ANTHROPIC_API_KEY`; everything else (including the no-show
-model) runs without it, and the UI says so when the key is missing.
+The agents need `ANTHROPIC_API_KEY`; the booking engine, the no-show model,
+rule-based notes and setup templates all work without it.
 
-| Client app | Provider app |
+| Provider app | |
 |---|---|
-| ![slots](docs/screenshots/client-4-slots.png) | ![calendar](docs/screenshots/pro-2-calendar.png) |
-| ![done](docs/screenshots/client-6-done.png) | ![risk](docs/screenshots/pro-1b-risk.png) |
+| ![today](docs/screenshots/pro-today-notes.png) | ![calendar](docs/screenshots/pro-calendar.png) |
+| ![setup](docs/screenshots/pro-signup-proposal.png) | ![insights](docs/screenshots/pro-insights.png) |
 
-More in [docs/screenshots](docs/screenshots).
+| Client app | | Public page, mobile |
+|---|---|---|
+| ![home](docs/screenshots/client-home.png) | ![business](docs/screenshots/client-business.png) | ![mobile](docs/screenshots/landing-mobile.png) |
+
+More in [docs/screenshots](docs/screenshots). Design decisions and their reasons
+are in [docs/DESIGN.md](docs/DESIGN.md).
 
 ## Features
 
@@ -54,7 +69,9 @@ More in [docs/screenshots](docs/screenshots).
 
 **Business side**
 - Agenda with "now" line, pending approvals, one-tap arrived / no-show / cancel
-- Week calendar with staff colors, overlapping lanes, filters, double-click to book
+- Week calendar with a fixed lane per staff member, filters, double-click to book
+- Staff management: invite staff, assign services, copy the owner's hours
+- Self-service signup with an assistant-written proposal
 - Customer list with visits, no-shows, spend, "regular" and "risk" tags
 - Owner vs staff permissions
 - Insights: revenue, utilization, no-show and cancel rates, lead time, peak hours, top services, staff load, and plain-language recommendations
@@ -73,10 +90,14 @@ backend/torim
   ai/engine.py      agent loop on the Anthropic Messages API (tools, fallback, append-only history)
   ai/receptionist.py customer agent (web chat + WhatsApp/Telegram webhook)
   ai/copilot.py     owner/staff agent over live data and calendar actions
+  ai/briefing.py    daily margin notes and personal reminder drafts (structured output)
+  ai/setup.py       business setup from a free-text description (structured output)
   ai/risk.py        no-show prediction model
   models.py         SQLAlchemy 2 models (SQLite by default, Postgres ready)
   api/public.py     customer API
   api/provider.py   provider API (auth, agenda, schedule, services, stats)
+  api/business.py   signup, business settings, staff
+  api/ai.py         briefing, reminders, waitlist offers
   seed.py           2 demo businesses, staff, ~6 weeks of bookings
 ```
 
@@ -91,7 +112,7 @@ make install        # python venv + npm install
 make dev-api        # API on :8000, seeds demo data on first start
 make dev-client     # client app on :5173
 make dev-provider   # provider app on :5174/pro/
-make test           # 28 backend tests (incl. agent loop with a scripted client) + typecheck
+make test           # 36 backend tests (incl. agent loops with a scripted client) + typecheck
 ```
 
 Or everything in one container: `docker compose up --build`, then open
@@ -114,6 +135,6 @@ API docs: http://localhost:8000/docs
 | `TORIM_WEBHOOK_URL` | | Target for the webhook channel |
 | `TORIM_PUBLIC_URL` | `http://localhost:5173` | Used in links inside messages |
 | `TORIM_DEV_OTP` | `1` | Return the sign-in code in the API response (demo only) |
-| `ANTHROPIC_API_KEY` | | Enables the AI receptionist and copilot |
-| `TORIM_AI_MODEL` | `claude-opus-5-5` | Model for both agents |
+| `ANTHROPIC_API_KEY` | | Enables the assistant (setup, customer chat, notes, reminders, owner chat) |
+| `TORIM_AI_MODEL` | `claude-opus-5-5` | Model for every assistant feature |
 | `TORIM_WEBHOOK_SECRET` | | Shared secret for `POST /api/webhooks/inbound` (header `X-Torim-Webhook-Secret`) |

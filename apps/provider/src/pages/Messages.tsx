@@ -24,7 +24,8 @@ const KIND: Record<string, string> = {
   waitlist_offer: "התפנה מקום",
   queue_called: "תור חי: נקראת",
   otp: "קוד כניסה",
-  ai_reply: "✨ תשובת הנציגה החכמה",
+  ai_reply: "תשובת העוזר",
+  personal_reminder: "תזכורת אישית",
 };
 
 export default function Messages() {
@@ -37,7 +38,7 @@ export default function Messages() {
       <div className="page-head">
         <div>
           <h1>הודעות ואוטומציות</h1>
-          <span className="small muted">כל הודעה שהמערכת שולחת ללקוחות (וואטסאפ / SMS / Webhook). תזכורות מתוזמנות מופיעות כ״בתור״.</span>
+          <span className="small muted">כל הודעה שיצאה ללקוחות, ומה שמתוזמן לצאת.</span>
         </div>
       </div>
       {!rows ? (

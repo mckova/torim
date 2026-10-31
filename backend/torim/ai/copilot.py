@@ -171,6 +171,26 @@ class Copilot:
         ).all()
         return {"blocked": True, "provider": p.name, "existing_bookings_in_range": [{"id": b.id, "customer": b.customer.name, "start": self._iso(b.start)} for b in clashes]}
 
+    def draft_reminder(self, booking_id: int):
+        from . import briefing
+
+        b = self._booking(booking_id)
+        return {"booking_id": b.id, "customer": b.customer.name, **briefing.reminder_draft(self.db, b)}
+
+    def message_customer(self, booking_id: int, message: str):
+        from ..notifications import notify_text
+
+        b = self._booking(booking_id)
+        if len(message.strip()) < 5:
+            raise ValueError("message too short")
+        notify_text(self.db, self.b.id, b.customer.phone, "personal_reminder", message.strip())
+        self.db.commit()
+        return {"sent_to": b.customer.name, "channel": "whatsapp"}
+
+    def offer_free_time(self, day: str):
+        ids = None if self.owner else [self.me.id]
+        return {"waitlisted_customers_notified": bk.offer_free_time(self.db, self.b, date.fromisoformat(day), ids)}
+
     def tools(self) -> list[Tool]:
         rng = {"date_from": {"type": "string"}, "date_to": {"type": "string"}}
         return [
@@ -193,6 +213,12 @@ class Copilot:
             Tool("block_time", "Block a time range (vacation, errand) so no new bookings land there. Returns existing bookings that clash.",
                  {"start": {"type": "string"}, "end": {"type": "string"}, "reason": NULL_STR, "provider_id": NULL_INT},
                  ["start", "end", "reason", "provider_id"], self.block_time),
+            Tool("draft_personal_reminder", "Draft a warm personal WhatsApp reminder for an upcoming booking (use for high no-show risk). Returns the text; does not send.",
+                 {"booking_id": {"type": "integer"}}, ["booking_id"], self.draft_reminder),
+            Tool("send_customer_message", "Send a WhatsApp message to the customer of a booking. Show the user the exact text and get a yes before sending, unless they already approved it.",
+                 {"booking_id": {"type": "integer"}, "message": {"type": "string"}}, ["booking_id", "message"], self.message_customer),
+            Tool("offer_free_time_to_waitlist", "Message waitlisted customers for a date (YYYY-MM-DD) about time that is still free, up to 3 per service, in join order.",
+                 {"day": {"type": "string"}}, ["day"], self.offer_free_time),
         ]
 
     def system(self) -> str:
@@ -200,10 +226,11 @@ class Copilot:
         staff = "\n".join(f"- [{p.id}] {p.name}, {p.title}" for p in self.b.providers)
         scope = "the whole business (owner)" if self.owner else f"only {self.me.name}'s own calendar (staff member)"
         return f"""You are the operations copilot of "{self.b.name}" inside TORIM Pro. You work for {self.me.name}; your access covers {scope}.
-Answer in Hebrew, concisely, like a sharp business manager: lead with the answer, then the 2-3 numbers that support it, then a concrete suggestion when useful. Short bullet lists are fine; no tables wider than 3 columns.
+Answer in Hebrew, concisely, like a sharp business manager: lead with the answer, then the 2-3 numbers that support it, then a concrete suggestion when useful. Short bullet lists are fine; no tables wider than 3 columns. Use plain punctuation (commas and periods), never an em dash.
 Use tools for every fact about bookings, customers and numbers; never guess. Dates are business-local (Asia/Jerusalem).
 Before cancelling bookings or blocking time that clashes with existing bookings, state what will happen and ask for confirmation, unless the user already explicitly asked for exactly that.
-When you see high no-show risk, suggest a specific action (personal call, deposit, extra reminder).
+When you see high no-show risk, suggest a specific action, and offer to draft and send a personal reminder.
+When the day has free time and people are on the waitlist, offer to message them.
 
 Services:
 {services}

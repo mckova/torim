@@ -18,6 +18,9 @@ const TOOL_LABEL: Record<string, string> = {
   waitlist: "רשימת המתנה",
   create_booking: "קביעת תור",
   set_booking_status: "עדכון תור",
+  draft_personal_reminder: "ניסוח תזכורת",
+  send_customer_message: "שליחת הודעה",
+  offer_free_time_to_waitlist: "הצעה לממתינים",
   block_time: "חסימת זמן",
 };
 
@@ -33,18 +36,29 @@ export default function Copilot() {
     <div className="stack">
       <div className="page-head">
         <div>
-          <h1>עוזר AI</h1>
+          <h1>העוזר</h1>
           <span className="small muted">שואלים בשפה חופשית. העוזר קורא את היומן והנתונים בזמן אמת, ויכול לקבוע, לאשר ולחסום זמן בשבילך.</span>
         </div>
-        <span className="ai-badge">✨ Claude Opus 5.5 · כלים</span>
+        <span className="ai-sign">Claude Opus 5.5</span>
       </div>
       {enabled === false ? (
-        <div className="alert warn">העוזר לא מחובר בשרת הזה (חסר ANTHROPIC_API_KEY). חיזוי אי-ההגעה במסך "היום" עובד גם בלי מפתח.</div>
+        <section className="copilot-off">
+          <p>
+            העוזר לא מחובר בשרת הזה. כדי לחבר אותו מגדירים <code dir="ltr">ANTHROPIC_API_KEY</code> ומפעילים מחדש. עד אז, ההערות במסך "היום" וחיזוי אי-ההגעה עובדים לפי כללים.
+          </p>
+          <h2 className="small muted">דברים שאפשר לבקש ממנו</h2>
+          <ul className="plain-list">
+            <li>מי בסיכון לא להגיע השבוע? תנסח לכל אחד תזכורת אישית.</li>
+            <li>תחסום לי מחר בין 14:00 ל-16:00, ותציע לממתינים את מה שהתפנה.</li>
+            <li>איך החודש הזה לעומת החודש שעבר, ואיזה שירות ירד?</li>
+            <li>תאשר את כל הבקשות הממתינות של מחר.</li>
+          </ul>
+        </section>
       ) : enabled === null ? (
         <div className="spinner" />
       ) : (
         <ChatPanel
-          height="70vh"
+          height="70dvh"
           intro={`שלום ${data.me.name.split(" ")[0]}, מה צריך היום?`}
           suggestions={[
             "מי בסיכון לא להגיע השבוע, ומה כדאי לעשות?",

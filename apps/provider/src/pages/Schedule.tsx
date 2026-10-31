@@ -106,7 +106,7 @@ export default function Schedule() {
                   <input type="time" className="input" value={d.end} onChange={(e) => set(wd, { ...d, end: e.target.value })} />
                   {d.breaks.map(([s, e], i) => (
                     <span key={i} className="chip">
-                      הפסקה {s}–{e}
+                      הפסקה <bdi>{s}-{e}</bdi>
                       <button style={{ border: 0, background: "none", cursor: "pointer" }} onClick={() => set(wd, { ...d, breaks: d.breaks.filter((_, j) => j !== i) })}>
                         ✕
                       </button>
