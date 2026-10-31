@@ -12,7 +12,7 @@ function Row({ b }: { b: Booking }) {
       <div className="grow stack tight">
         <b>{b.service.name}</b>
         <span className="small muted">
-          {dayLong(b.start)} · {time(b.start)} · {b.provider.name}
+          {dayLong(b.start)}, {time(b.start)}, with {b.provider.name}
         </span>
         <span className="tiny muted">{b.business.name}</span>
       </div>
@@ -52,7 +52,7 @@ export default function MyBookings() {
     return (
       <div className="stack">
         <div className="row between">
-          <h1>התורים שלי</h1>
+          <h1>My bookings</h1>
           <button
             className="btn ghost sm"
             onClick={() => {
@@ -61,16 +61,16 @@ export default function MyBookings() {
               setData(null);
             }}
           >
-            יציאה
+            Sign out
           </button>
         </div>
         <ErrorBox error={error} />
         {!data && <Spinner />}
         {data && (
           <>
-            <h2>קרובים</h2>
-            {data.upcoming.length ? data.upcoming.map((b) => <Row key={b.uid} b={b} />) : <div className="empty">אין תורים קרובים</div>}
-            <h2>היסטוריה</h2>
+            <h2>Coming up</h2>
+            {data.upcoming.length ? data.upcoming.map((b) => <Row key={b.uid} b={b} />) : <div className="empty">Nothing coming up</div>}
+            <h2>History</h2>
             {data.past.slice(0, 20).map((b) => (
               <Row key={b.uid} b={b} />
             ))}
@@ -83,11 +83,11 @@ export default function MyBookings() {
   const now = new Date().toISOString();
   return (
     <div className="stack">
-      <h1>התורים שלי</h1>
+      <h1>My bookings</h1>
       {!local && <Spinner />}
       {local && local.filter((b) => b.end > now).length > 0 && (
         <>
-          <p className="small muted">תורים שנקבעו מהמכשיר הזה:</p>
+          <p className="small muted">Booked from this device:</p>
           {local
             .filter((b) => b.end > now)
             .map((b) => (
@@ -143,27 +143,27 @@ function SignIn({ onIn }: { onIn: (s: ReturnType<typeof getSession>) => void }) 
 
   return (
     <div className="card stack">
-      <h2>כניסה עם מספר טלפון</h2>
-      <p className="small muted">לצפייה בכל התורים וההיסטוריה שלך בעסק, גם ממכשיר אחר.</p>
+      <h2>Sign in with your phone</h2>
+      <p className="small muted">See all your bookings and history with a business, from any device.</p>
       {!sent ? (
         <form className="stack" onSubmit={send}>
-          <select className="input" value={slug} onChange={(e) => setSlug(e.target.value)}>
+          <select className="input" aria-label="Business" value={slug} onChange={(e) => setSlug(e.target.value)}>
             {businesses.map((b) => (
               <option key={b.slug} value={b.slug}>
                 {b.name}
               </option>
             ))}
           </select>
-          <input className="input" dir="ltr" inputMode="tel" placeholder="050-0000000" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input className="input" inputMode="tel" aria-label="Mobile" placeholder="050-0000000" required value={phone} onChange={(e) => setPhone(e.target.value)} />
           <ErrorBox error={error} />
-          <button className="btn block">שליחת קוד בוואטסאפ</button>
+          <button className="btn block">Send a code on WhatsApp</button>
         </form>
       ) : (
         <form className="stack" onSubmit={verify}>
-          {devCode && <div className="alert warn small">מצב הדגמה: הקוד הוא {devCode}</div>}
-          <input className="input center" dir="ltr" inputMode="numeric" maxLength={6} placeholder="קוד בן 6 ספרות" required value={code} onChange={(e) => setCode(e.target.value)} />
+          {devCode && <div className="alert warn small">Demo mode: the code is {devCode}</div>}
+          <input className="input center" inputMode="numeric" maxLength={6} aria-label="Code" placeholder="6-digit code" required value={code} onChange={(e) => setCode(e.target.value)} />
           <ErrorBox error={error} />
-          <button className="btn block">כניסה</button>
+          <button className="btn block">Sign in</button>
         </form>
       )}
     </div>

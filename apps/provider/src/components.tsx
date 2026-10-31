@@ -32,7 +32,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
       <div ref={box} className="modal stack" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}>
         <div className="row between">
           <h2>{title}</h2>
-          <button className="btn ghost sm icon-only" onClick={onClose} aria-label="סגירה">
+          <button className="btn ghost sm icon-only" onClick={onClose} aria-label="Close">
             <Icon name="x" />
           </button>
         </div>
@@ -73,24 +73,24 @@ export function BookingActions({ b, onChange }: { b: Booking; onChange: (b: Book
       <div className="row wrap">
         {b.status === "pending" && (
           <button className="btn sm" onClick={() => go("confirmed")}>
-            אישור
+            Approve
           </button>
         )}
         {b.status === "confirmed" && (
           <>
             <button className="btn sm" onClick={() => go("completed")}>
-              ✓ הגיע
+              Arrived
             </button>
             {isPast && (
               <button className="btn soft sm" onClick={() => go("no_show")}>
-                לא הגיע
+                No-show
               </button>
             )}
           </>
         )}
         {(b.status === "pending" || b.status === "confirmed") && (
           <button className="btn danger sm" onClick={() => go("cancelled")}>
-            {b.status === "pending" ? "דחייה" : "ביטול"}
+            {b.status === "pending" ? "Decline" : "Cancel"}
           </button>
         )}
       </div>
@@ -105,24 +105,24 @@ export function BookingModal({ b, onClose, onChange, onRemind }: { b: Booking; o
     <Modal title={b.customer.name} onClose={onClose}>
       <div className="row wrap">
         <span className={`chip ${b.status}`}>{STATUS_LABEL[b.status]}</span>
-        <span className="chip">{b.source === "online" ? "הזמנה אונליין" : b.source === "provider" ? "נקבע ע״י העסק" : b.source === "ai" ? "נקבע ע״י העוזר" : b.source}</span>
+        <span className="chip">{b.source === "online" ? "Booked online" : b.source === "provider" ? "Booked by the business" : b.source === "ai" ? "Booked by the assistant" : b.source}</span>
       </div>
       <div className="card flat">
-        <Line k="שירות" v={b.service.name} />
-        <Line k="מתי" v={`${dayLong(b.start)} · ${time(b.start)}–${time(b.end)}`} />
-        <Line k="אצל" v={b.provider.name} />
-        <Line k="טלפון" v={<a href={`tel:${b.customer.phone}`} dir="ltr">{phoneDisplay(b.customer.phone)}</a>} />
-        <Line k="מחיר" v={money(b.price)} />
-        {b.notes && <Line k="הערות" v={b.notes} />}
-        {b.cancellation_reason && <Line k="סיבת ביטול" v={b.cancellation_reason} />}
+        <Line k="Service" v={b.service.name} />
+        <Line k="When" v={`${dayLong(b.start)}, ${time(b.start)} to ${time(b.end)}`} />
+        <Line k="With" v={b.provider.name} />
+        <Line k="Phone" v={<a href={`tel:${b.customer.phone}`}>{phoneDisplay(b.customer.phone)}</a>} />
+        <Line k="Price" v={money(b.price)} />
+        {b.notes && <Line k="Notes" v={b.notes} />}
+        {b.cancellation_reason && <Line k="Cancellation reason" v={b.cancellation_reason} />}
       </div>
       <div className="row wrap">
         <a className="btn ghost sm" href={`https://wa.me/${b.customer.phone.replace("+", "")}`} target="_blank" rel="noreferrer">
-          וואטסאפ ללקוח
+          WhatsApp the client
         </a>
         {upcoming && onRemind && (
           <button className="btn soft sm" onClick={() => onRemind(b)}>
-            תזכורת אישית
+            Personal reminder
           </button>
         )}
       </div>
@@ -133,7 +133,7 @@ export function BookingModal({ b, onClose, onChange, onRemind }: { b: Booking; o
 
 function Line({ k, v }: { k: string; v: ReactNode }) {
   return (
-    <div className="row between" style={{ padding: "0.4rem 0", borderBottom: "1px dashed var(--line)" }}>
+    <div className="row between" style={{ padding: "0.4rem 0", borderBottom: "1px solid var(--rule-2)" }}>
       <span className="muted small">{k}</span>
       <b className="small">{v}</b>
     </div>
@@ -178,11 +178,11 @@ export function NewBookingModal({ onClose, onCreated, date: initialDate }: { onC
   }
 
   return (
-    <Modal title="תור חדש" onClose={onClose}>
+    <Modal title="New booking" onClose={onClose}>
       <form className="stack" onSubmit={submit}>
         <div className="grid two">
           <div className="field">
-            <label htmlFor="nb-service">שירות</label>
+            <label htmlFor="nb-service">Service</label>
             <select id="nb-service" className="input" value={serviceId} onChange={(e) => setServiceId(Number(e.target.value))}>
               {services.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -192,7 +192,7 @@ export function NewBookingModal({ onClose, onCreated, date: initialDate }: { onC
             </select>
           </div>
           <div className="field">
-            <label htmlFor="nb-provider">נותן שירות</label>
+            <label htmlFor="nb-provider">With</label>
             <select id="nb-provider" className="input" value={providerId ?? ""} onChange={(e) => setProviderId(Number(e.target.value))}>
               {providerOptions.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -203,18 +203,18 @@ export function NewBookingModal({ onClose, onCreated, date: initialDate }: { onC
           </div>
         </div>
         <div className="row">
-          <button type="button" className="btn ghost sm icon-only" onClick={() => setDate(addDays(date, -1))} aria-label="יום קודם">
-            <Icon name="arrow" className="flip-rtl" />
-          </button>
-          <input type="date" className="input grow" aria-label="תאריך" value={date} onChange={(e) => setDate(e.target.value)} />
-          <button type="button" className="btn ghost sm icon-only" onClick={() => setDate(addDays(date, 1))} aria-label="יום הבא">
+          <button type="button" className="btn ghost sm icon-only" onClick={() => setDate(addDays(date, -1))} aria-label="Previous day">
             <Icon name="arrow" />
+          </button>
+          <input type="date" className="input grow" aria-label="Date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <button type="button" className="btn ghost sm icon-only" onClick={() => setDate(addDays(date, 1))} aria-label="Next day">
+            <Icon name="arrow" className="flip" />
           </button>
         </div>
         {!slots ? (
           <div className="spinner" />
         ) : slots.length === 0 ? (
-          <div className="empty small">אין שעות פנויות ביום הזה</div>
+          <div className="empty small">No free times on this day</div>
         ) : (
           <div className="slots">
             {slots.map((s) => (
@@ -225,13 +225,13 @@ export function NewBookingModal({ onClose, onCreated, date: initialDate }: { onC
           </div>
         )}
         <div className="grid two">
-          <input className="input" aria-label="שם הלקוח" placeholder="שם הלקוח" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} />
-          <input className="input" aria-label="טלפון" placeholder="טלפון" dir="ltr" inputMode="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input className="input" aria-label="Client name" placeholder="Client name" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input" aria-label="Phone" placeholder="Phone" inputMode="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
-        <input className="input" aria-label="הערה" placeholder="הערה (לא חובה)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <input className="input" aria-label="Note" placeholder="Note (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
         <ErrorText error={error} />
         <button className="btn block" disabled={!start}>
-          קביעת התור ושליחת אישור ללקוח
+          Book and send the client a confirmation
         </button>
       </form>
     </Modal>

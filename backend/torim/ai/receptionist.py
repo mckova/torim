@@ -26,16 +26,16 @@ NULL_STR = {"type": ["string", "null"]}
 
 def system_prompt(b: Business) -> str:
     services = "\n".join(
-        f"- [{s.id}] {s.name}: {s.duration} דק׳, {s.price:g} ₪"
-        + (f", קבוצה עד {s.capacity}" if s.capacity > 1 else "")
-        + (", דורש אישור של העסק" if s.requires_confirmation else "")
+        f"- [{s.id}] {s.name}: {s.duration} min, {s.price:g} ILS"
+        + (f", group of up to {s.capacity}" if s.capacity > 1 else "")
+        + (", needs the business to approve" if s.requires_confirmation else "")
         + (f". {s.description}" if s.description else "")
         for s in b.services
         if s.active
     )
     staff = "\n".join(f"- [{p.id}] {p.name} ({p.title})" for p in b.providers if p.active)
     return f"""You are the virtual receptionist of "{b.name}" ({b.category}), {b.address}, phone {b.phone}.
-You talk with customers in Hebrew (or in the customer's language if they write in another one), in a warm, short, WhatsApp-style tone. No markdown tables. Use plain punctuation (commas and periods), never an em dash.
+You talk with customers in English, or in the customer's own language when they write in another one (Hebrew is common), in a warm, short, WhatsApp-style tone. No markdown tables. Use plain punctuation (commas and periods), never an em dash.
 
 What you can do with your tools: find free times, book, look up the customer's bookings, reschedule, cancel, and add the customer to the waitlist for a full day.
 
@@ -222,7 +222,7 @@ class Receptionist:
 
     def turn(self, text: str) -> TurnResult:
         now = now_utc().astimezone(self.tz)
-        stamped = f"[{now.strftime('%A %Y-%m-%d %H:%M')} שעון ישראל]\n{text}"
+        stamped = f"[{now.strftime('%A %Y-%m-%d %H:%M')} Israel time]\n{text}"
         result = run_turn(
             system=system_prompt(self.b),
             tools=self.tools(),

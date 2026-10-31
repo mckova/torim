@@ -17,11 +17,11 @@ function BookingCard({ b }: { b: Booking }) {
         <span className={`chip ${b.status}`}>{STATUS_LABEL[b.status]}</span>
       </div>
       <span className="small muted">
-        {dayLong(b.start)} · {time(b.start)} · {b.provider.name}
+        {dayLong(b.start)}, {time(b.start)}, with {b.provider.name}
       </span>
       {b.manage_token && (
         <Link className="small" to={`/manage/${b.uid}?t=${b.manage_token}`}>
-          ניהול התור
+          Manage booking
         </Link>
       )}
     </div>
@@ -40,7 +40,7 @@ export default function Assistant({ slug, businessName }: { slug: string; busine
   if (!enabled)
     return (
       <div className="alert warn">
-        העוזר לא פעיל כרגע בעסק הזה. אפשר לקבוע תור רגיל בלשונית "קביעת תור".
+        The assistant isn't on for this business right now. You can still book in the Book tab.
       </div>
     );
 
@@ -48,14 +48,14 @@ export default function Assistant({ slug, businessName }: { slug: string; busine
   return (
     <div className="stack">
       <div className="row between">
-        <span className="ai-sign">העוזר של {businessName}</span>
-        <span className="tiny muted">קובע, מזיז ומבטל תורים לפי מה שתכתבו</span>
+        <span className="ai-sign">{businessName} assistant</span>
+        <span className="tiny muted">Books, moves and cancels from what you write</span>
       </div>
       <ChatPanel
         height="62vh"
-        intro={`שלום, כאן העוזר של ${businessName}. כתבו מה צריך ומתי נוח לכם, ואבדוק מה פנוי ביומן.`}
-        suggestions={["אפשר תספורת מחר אחרי 17:00?", "מה הכי מוקדם שיש השבוע?", "אני רוצה לבטל את התור שלי"]}
-        placeholder="למשל: תור לתספורת ביום שלישי בערב"
+        intro={`Hi, this is the ${businessName} assistant. Tell me what you need and when suits you, and I'll check the calendar.`}
+        suggestions={["Can I get a haircut tomorrow after 5pm?", "What's the earliest slot this week?", "I want to cancel my booking"]}
+        placeholder="For example: a haircut on Tuesday evening"
         send={async (text) => {
           const r = await api.post<Reply>(`/api/b/${slug}/assistant`, { message: text, conversation_id: conv.current });
           conv.current = r.conversation_id;
@@ -66,7 +66,7 @@ export default function Assistant({ slug, businessName }: { slug: string; busine
           };
         }}
       />
-      {!session && <p className="tiny muted center">כדי שהעוזר יראה את התורים הקיימים שלכם, התחברו במסך "התורים שלי".</p>}
+      {!session && <p className="tiny muted center">To let the assistant see your existing bookings, sign in under My bookings.</p>}
     </div>
   );
 }

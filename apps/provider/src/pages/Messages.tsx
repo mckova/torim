@@ -13,19 +13,19 @@ interface N {
 }
 
 const KIND: Record<string, string> = {
-  booked: "אישור הזמנה",
-  pending: "בקשה התקבלה",
-  confirmed: "אושר",
-  cancelled: "ביטול",
-  rescheduled: "שינוי מועד",
-  reminder_24h: "תזכורת יום לפני",
-  reminder_2h: "תזכורת שעתיים לפני",
-  provider_new: "התראה לצוות",
-  waitlist_offer: "התפנה מקום",
-  queue_called: "תור חי: נקראת",
-  otp: "קוד כניסה",
-  ai_reply: "תשובת העוזר",
-  personal_reminder: "תזכורת אישית",
+  booked: "Booking confirmation",
+  pending: "Request received",
+  confirmed: "Approved",
+  cancelled: "Cancellation",
+  rescheduled: "Moved",
+  reminder_24h: "Reminder, a day before",
+  reminder_2h: "Reminder, two hours before",
+  provider_new: "Team alert",
+  waitlist_offer: "A spot opened up",
+  queue_called: "Walk-in: you're up",
+  otp: "Sign-in code",
+  ai_reply: "Assistant reply",
+  personal_reminder: "Personal reminder",
 };
 
 export default function Messages() {
@@ -34,33 +34,33 @@ export default function Messages() {
     api.get<N[]>("/api/pro/notifications", { limit: 100 }).then(setRows);
   }, []);
   return (
-    <div className="stack">
+    <div className="stack loose">
       <div className="page-head">
         <div>
-          <h1>הודעות ואוטומציות</h1>
-          <span className="small muted">כל הודעה שיצאה ללקוחות, ומה שמתוזמן לצאת.</span>
+          <h1>Messages</h1>
+          <span className="small muted">Every message sent to clients, and what is scheduled to go out.</span>
         </div>
       </div>
       {!rows ? (
         <div className="spinner" />
       ) : rows.length === 0 ? (
-        <div className="card empty">עוד לא נשלחו הודעות. קבעו תור כדי לראות את האוטומציה בפעולה.</div>
+        <div className="card empty">No messages yet. Make a booking to see the automations at work.</div>
       ) : (
         <div className="stack tight">
           {rows.map((n) => (
-            <div key={n.id} className="card flat stack tight">
+            <div key={n.id} className="card stack tight">
               <div className="row between wrap">
                 <div className="row">
                   <span className="chip accent">{KIND[n.kind] ?? n.kind}</span>
-                  <span className="small muted" dir="ltr">
+                  <span className="small muted">
                     {n.to.includes("@") ? n.to : phoneDisplay(n.to)}
                   </span>
                 </div>
                 <span className={`chip ${n.status === "sent" ? "confirmed" : n.status === "queued" ? "pending" : "cancelled"}`}>
-                  {n.status === "sent" ? `נשלח ${time(n.sent_at!)}` : n.status === "queued" ? `מתוזמן ל-${dayLong(n.send_at)} ${time(n.send_at)}` : n.status === "cancelled" ? "בוטל" : "נכשל"}
+                  {n.status === "sent" ? `Sent ${time(n.sent_at!)}` : n.status === "queued" ? `Scheduled for ${dayLong(n.send_at)} ${time(n.send_at)}` : n.status === "cancelled" ? "Cancelled" : "Failed"}
                 </span>
               </div>
-              <p className="small" style={{ background: "#ecfdf5", padding: "0.6rem 0.8rem", borderRadius: 10 }}>
+              <p className="small" dir="auto" style={{ background: "#fff", padding: "0.65rem 0.85rem", borderRadius: 16, borderEndStartRadius: 6 }}>
                 {n.body}
               </p>
             </div>

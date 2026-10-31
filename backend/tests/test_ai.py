@@ -75,7 +75,7 @@ def test_ai_disabled_without_key(client):
 
 
 def test_receptionist_books_through_tools(client, fake):
-    sid = service_id(client, "תספורת גבר")
+    sid = service_id(client, "Men's haircut")
     from datetime import date, timedelta
 
     day = (date.today() + timedelta(days=3)).isoformat()
@@ -149,7 +149,7 @@ def test_receptionist_cannot_touch_other_peoples_bookings(client, fake, owner):
 def test_whatsapp_sender_can_cancel_own_booking(client, fake, owner):
     from datetime import date, timedelta
 
-    sid = service_id(client, "תספורת גבר")
+    sid = service_id(client, "Men's haircut")
     for i in range(3, 12):
         slots = client.get("/api/b/gal-barbers/slots", params={"service_id": sid, "date": (date.today() + timedelta(days=i)).isoformat()}).json()
         if slots:
@@ -187,7 +187,7 @@ def test_copilot_reads_data_and_respects_staff_scope(client, fake):
     def step2(messages, kw):
         results = [json.loads(b["content"]) for b in messages[-1]["content"]]
         bookings, risks = results
-        assert bookings and all(b["provider"] == "דנה שגיא" for b in bookings)  # provider_id=1 ignored for staff
+        assert bookings and all(b["provider"] == "Dana Sagi" for b in bookings)  # provider_id=1 ignored for staff
         assert all("probability" in r for r in risks)
         return "end_turn", [text("סיכום מוכן")]
 

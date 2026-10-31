@@ -28,22 +28,22 @@ interface Proposal {
 }
 
 const CATEGORIES = [
-  { id: "barber", label: "מספרה" },
-  { id: "beauty", label: "קוסמטיקה וציפורניים" },
-  { id: "clinic", label: "קליניקה / טיפולים" },
-  { id: "fitness", label: "סטודיו / כושר" },
-  { id: "other", label: "אחר" },
+  { id: "barber", label: "Barbershop" },
+  { id: "beauty", label: "Beauty and nails" },
+  { id: "clinic", label: "Clinic and treatments" },
+  { id: "fitness", label: "Studio and fitness" },
+  { id: "other", label: "Something else" },
 ];
 const EXAMPLES: Record<string, string> = {
-  barber: "אני ספר, עובד לבד בחיפה. תספורת גבר 80 ש״ח, עם זקן 110. עובד א׳-ה׳ 10 עד 20, ובשישי עד 14. הפסקה בצהריים חצי שעה.",
-  beauty: "סטודיו לציפורניים ברמת גן. מניקור ג׳ל, לק בפדיקור, בניית ציפורניים. ימים א׳-ה׳ 9:30-19:00, שישי עד 13:00.",
-  clinic: "קליניקה לפיזיותרפיה. פגישת אבחון ראשונה שעה, טיפולי המשך 45 דקות. מקבלת קהל ב׳, ג׳, ה׳ 8-17 וב-א׳ עד 13.",
-  fitness: "סטודיו פילאטיס מכשירים. שיעורים קבוצתיים של 50 דקות עד 6 משתתפות, אימון אישי. בוקר 7-11 וערב 17-21.",
+  barber: "I'm a barber working alone in Haifa. Men's cut 80 shekels, with beard 110. Sunday to Thursday 10 to 8, Friday until 2. Half an hour lunch break.",
+  beauty: "Nail studio in Ramat Gan. Gel manicure, pedicure, nail extensions. Sunday to Thursday 9:30 to 7, Friday until 1.",
+  clinic: "Physiotherapy clinic. First assessment is an hour, follow-ups 45 minutes. Open Monday, Tuesday and Thursday 8 to 5, Sunday until 1.",
+  fitness: "Reformer Pilates studio. 50 minute group classes of up to 6, and personal training. Mornings 7 to 11 and evenings 5 to 9.",
   other: "",
 };
 const WEEK = [6, 0, 1, 2, 3, 4, 5];
-const DAY_NAME = ["שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת", "ראשון"];
-const STEPS = ["העסק", "ספרו לנו", "שירותים ושעות", "החשבון שלכם"];
+const DAY_NAME = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const STEPS = ["The business", "Tell us about it", "Services and hours", "Your account"];
 
 export default function Signup({ onDone }: { onDone: (token: string) => void }) {
   const nav = useNavigate();
@@ -136,26 +136,29 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
 
   return (
     <div className="signup">
-      <aside className="signup-aside">
+      <aside className="signup-aside panel sunset">
         <div className="brand">
-          <b>TORIM</b> <span className="muted small">לעסק</span>
+          <span className="logo-mark" style={{ background: "#fff", color: "var(--rose-ink)" }} aria-hidden>
+            t
+          </span>
+          torim
         </div>
         <p className="hide-sm">
-          פתיחת יומן תורים לעסק. בשלב השני מתארים את העסק במילים שלכם, והעוזר רושם את השירותים, המחירים ושעות הפעילות. כל מה שהוא כתב מסומן בכחול ואפשר לשנות.
+          Open an appointment calendar for your business. In step two you describe the business in your own words, and the assistant writes the services, prices and opening hours. You can change anything it wrote.
         </p>
         <div className="signup-steps" aria-hidden>
           {STEPS.map((s, i) => (
             <div key={s} className={i === step ? "on" : i < step ? "done" : ""}>
-              <b>{String(i + 1).padStart(2, "0")}</b>
+              <b>{i + 1}</b>
               <span>{s}</span>
             </div>
           ))}
         </div>
       </aside>
 
-      <main className="signup-main">
+      <main className="signup-main panel">
         <p className="eyebrow">
-          שלב {step + 1} מתוך {STEPS.length}
+          Step {step + 1} of {STEPS.length}
         </p>
 
         {step === 0 && (
@@ -167,15 +170,15 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
             }}
           >
             <h2 ref={heading} tabIndex={-1} className="step-title">
-              מה שם העסק?
+              What is the business called?
             </h2>
             <div className="field">
-              <label htmlFor="biz-name">שם העסק</label>
-              <input id="biz-name" className="input" required minLength={2} value={biz.name} onChange={(e) => setBiz({ ...biz, name: e.target.value })} placeholder="למשל: המספרה של רון" autoFocus />
+              <label htmlFor="biz-name">Business name</label>
+              <input id="biz-name" className="input" required minLength={2} value={biz.name} onChange={(e) => setBiz({ ...biz, name: e.target.value })} placeholder="For example: Ron's Barbershop" autoFocus />
             </div>
             <div className="field">
               <span className="label" id="cat-label">
-                תחום
+                Type of business
               </span>
               <div className="cat-grid" role="radiogroup" aria-labelledby="cat-label">
                 {CATEGORIES.map((c) => (
@@ -194,19 +197,19 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
             </div>
             <div className="grid two">
               <div className="field">
-                <label htmlFor="biz-phone">טלפון העסק</label>
-                <input id="biz-phone" className="input" dir="ltr" inputMode="tel" value={biz.phone} onChange={(e) => setBiz({ ...biz, phone: e.target.value })} />
+                <label htmlFor="biz-phone">Business phone</label>
+                <input id="biz-phone" className="input" inputMode="tel" value={biz.phone} onChange={(e) => setBiz({ ...biz, phone: e.target.value })} />
               </div>
               <div className="field">
-                <label htmlFor="biz-addr">כתובת</label>
+                <label htmlFor="biz-addr">Address</label>
                 <input id="biz-addr" className="input" value={biz.address} onChange={(e) => setBiz({ ...biz, address: e.target.value })} />
               </div>
             </div>
             <div className="row between">
               <Link to="/" className="small">
-                כבר יש לי חשבון
+                I already have an account
               </Link>
-              <button className="btn lg">המשך</button>
+              <button className="btn lg">Continue</button>
             </div>
           </form>
         )}
@@ -215,38 +218,38 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
           <div className="stack loose">
             <div className="stack tight">
               <h2 ref={heading} tabIndex={-1} className="step-title">
-                ספרו לנו על {biz.name || "העסק"}
+                Tell us about {biz.name || "the business"}
               </h2>
-              <p className="muted">איזה שירותים, כמה זמן כל אחד, מחירים, ימים ושעות. אפשר בקצרה ובשפה חופשית, מה שלא תכתבו ה-AI ישלים לפי מה שמקובל בתחום.</p>
+              <p className="muted">Which services, how long each takes, prices, days and hours. Keep it short and casual; whatever you leave out, the assistant fills in from what is usual in your field.</p>
             </div>
             <div className="field">
               <label htmlFor="about">
-                התיאור שלכם
+                Your description
               </label>
-              <textarea id="about" className="input" rows={6} value={about} onChange={(e) => setAbout(e.target.value)} placeholder={EXAMPLES[biz.category] || "תארו את העסק…"} />
+              <textarea id="about" className="input" rows={6} value={about} onChange={(e) => setAbout(e.target.value)} placeholder={EXAMPLES[biz.category] || "Describe the business…"} />
               {EXAMPLES[biz.category] && !about && (
                 <button type="button" className="chip" style={{ alignSelf: "flex-start" }} onClick={() => setAbout(EXAMPLES[biz.category])}>
-                  להשתמש בדוגמה
+                  Use the example
                 </button>
               )}
             </div>
             {busy && (
               <div className="ai-thinking" role="status">
                 <div className="spinner" />
-                <span className="writing">העוזר רושם שירותים ושעות</span>
+                <span className="writing">The assistant is writing your services and hours</span>
               </div>
             )}
             {error && <div className="alert error" role="alert">{error}</div>}
             <div className="row between">
               <button type="button" className="btn ghost" onClick={() => setStep(0)}>
-                חזרה
+                Back
               </button>
               <div className="row">
                 <button type="button" className="btn ghost" disabled={busy} onClick={() => { setAbout(""); generate(); }}>
-                  דילוג, תבנית מוכנה
+                  Skip, use a template
                 </button>
                 <button type="button" className="btn ai lg" disabled={busy || !about.trim()} onClick={generate}>
-                  לרשום לי את העסק
+                  Set it up for me
                 </button>
               </div>
             </div>
@@ -263,9 +266,9 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
           >
             <div className="stack tight">
               <h2 ref={heading} tabIndex={-1} className="step-title">
-                {proposal.source === "ai" ? "זה מה שהעוזר רשם" : "נקודת התחלה לתחום שלכם"}
+                {proposal.source === "ai" ? "Here is what the assistant wrote" : "A starting point for your field"}
               </h2>
-              <p className="muted">הכול ניתן לעריכה, עכשיו או בכל רגע אחר כך.</p>
+              <p className="muted">You can edit all of it, now or any time later.</p>
               {proposal.notes && (
                 <p className="by-ai small">{proposal.notes}</p>
               )}
@@ -273,24 +276,24 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
 
             <section className="proposal-section" aria-labelledby="svc-h">
               <div className="section-title">
-                <h3 id="svc-h">שירותים</h3>
-                {proposal.source === "ai" && <span className="ai-sign">נרשם ע״י העוזר</span>}
+                <h3 id="svc-h">Services</h3>
+                {proposal.source === "ai" && <span className="ai-sign">Written by the assistant</span>}
               </div>
               {proposal.services.map((s, i) => (
                 <div key={i} className="svc-row">
-                  <input className={`input ${proposal.source === "ai" ? "by-ai" : ""}`} aria-label="שם השירות" required value={s.name} onChange={(e) => setSvc(i, { name: e.target.value })} />
+                  <input className={`input ${proposal.source === "ai" ? "by-ai" : ""}`} aria-label="Service name" required value={s.name} onChange={(e) => setSvc(i, { name: e.target.value })} />
                   <div className="input-group">
-                    <input className="input num" aria-label="משך בדקות" type="number" min={5} max={480} required value={s.duration} onChange={(e) => setSvc(i, { duration: Number(e.target.value) })} />
-                    <span className="addon">דק׳</span>
+                    <input className="input num" aria-label="Duration in minutes" type="number" min={5} max={480} required value={s.duration} onChange={(e) => setSvc(i, { duration: Number(e.target.value) })} />
+                    <span className="addon">min</span>
                   </div>
                   <div className="input-group">
-                    <input className="input num" aria-label="מחיר" type="number" min={0} required value={s.price} onChange={(e) => setSvc(i, { price: Number(e.target.value) })} />
+                    <input className="input num" aria-label="Price" type="number" min={0} required value={s.price} onChange={(e) => setSvc(i, { price: Number(e.target.value) })} />
                     <span className="addon">₪</span>
                   </div>
                   <button
                     type="button"
                     className="btn ghost icon-only sm"
-                    aria-label={`הסרת ${s.name}`}
+                    aria-label={`Remove ${s.name}`}
                     disabled={proposal.services.length === 1}
                     onClick={() => setProposal({ ...proposal, services: proposal.services.filter((_, j) => j !== i) })}
                   >
@@ -304,12 +307,12 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
                 style={{ alignSelf: "flex-start" }}
                 onClick={() => setProposal({ ...proposal, services: [...proposal.services, { name: "", description: "", duration: 30, price: 0, buffer_after: 0, capacity: 1, requires_confirmation: false }] })}
               >
-                הוספת שירות
+                Add a service
               </button>
             </section>
 
             <section className="proposal-section" aria-labelledby="hours-h">
-              <h3 id="hours-h">שעות פעילות</h3>
+              <h3 id="hours-h">Opening hours</h3>
               {WEEK.map((wd) => {
                 const d = dayOf(wd);
                 return (
@@ -320,22 +323,22 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
                       className={`toggle ${d ? "on" : ""}`}
                       role="switch"
                       aria-checked={!!d}
-                      aria-label={`פתוח ביום ${DAY_NAME[wd]}`}
+                      aria-label={`Open on ${DAY_NAME[wd]}`}
                       onClick={() => setDay(wd, d ? null : { weekday: wd, start: "09:00", end: "18:00", breaks: [] })}
                     />
                     {d ? (
                       <div className="row wrap">
-                        <input type="time" className="input num" aria-label="שעת פתיחה" value={d.start} onChange={(e) => setDay(wd, { ...d, start: e.target.value })} />
-                        <span className="muted">עד</span>
-                        <input type="time" className="input num" aria-label="שעת סגירה" value={d.end} onChange={(e) => setDay(wd, { ...d, end: e.target.value })} />
+                        <input type="time" className="input num" aria-label="Opens at" value={d.start} onChange={(e) => setDay(wd, { ...d, start: e.target.value })} />
+                        <span className="muted">to</span>
+                        <input type="time" className="input num" aria-label="Closes at" value={d.end} onChange={(e) => setDay(wd, { ...d, end: e.target.value })} />
                         {d.breaks.map((b) => (
                           <span key={b.join()} className="chip">
-                            הפסקה <bdi>{b[0]}-{b[1]}</bdi>
+                            Break {b[0]} to {b[1]}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <span className="small muted">סגור</span>
+                      <span className="small muted">Closed</span>
                     )}
                   </div>
                 );
@@ -343,14 +346,14 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
             </section>
 
             <section className="proposal-section" aria-labelledby="look-h">
-              <h3 id="look-h">איך הדף שלכם ייראה ללקוחות</h3>
+              <h3 id="look-h">How your page looks to clients</h3>
               <div className="field">
-                <label htmlFor="pub-desc">תיאור קצר</label>
+                <label htmlFor="pub-desc">Short description</label>
                 <textarea id="pub-desc" className="input" rows={2} value={proposal.description} onChange={(e) => setProposal({ ...proposal, description: e.target.value })} />
               </div>
               <div className="row">
                 <label htmlFor="color" className="label">
-                  צבע המותג
+                  Brand colour
                 </label>
                 <input id="color" type="color" value={proposal.accent_color} onChange={(e) => setProposal({ ...proposal, accent_color: e.target.value })} />
               </div>
@@ -358,10 +361,10 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
 
             <div className="row between">
               <button type="button" className="btn ghost" onClick={() => setStep(1)}>
-                חזרה
+                Back
               </button>
               <button className="btn lg" disabled={proposal.days.length === 0}>
-                נראה טוב, המשך
+                Looks good, continue
               </button>
             </div>
           </form>
@@ -370,19 +373,18 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
         {step === 3 && (
           <form className="stack loose" onSubmit={submit}>
             <h2 ref={heading} tabIndex={-1} className="step-title">
-              החשבון שלכם
+              Your account
             </h2>
             <div className="grid two">
               <div className="field">
-                <label htmlFor="owner">השם שלכם</label>
+                <label htmlFor="owner">Your name</label>
                 <input id="owner" className="input" required minLength={2} autoComplete="name" value={account.owner_name} onChange={(e) => setAccount({ ...account, owner_name: e.target.value })} />
               </div>
               <div className="field">
-                <label htmlFor="email">אימייל</label>
+                <label htmlFor="email">Email</label>
                 <input
                   id="email"
                   className="input"
-                  dir="ltr"
                   type="email"
                   required
                   autoComplete="email"
@@ -395,15 +397,15 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
               </div>
             </div>
             <div className="field">
-              <label htmlFor="pw">סיסמה</label>
-              <input id="pw" className="input" dir="ltr" type="password" required minLength={8} autoComplete="new-password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} aria-describedby="pw-hint" />
+              <label htmlFor="pw">Password</label>
+              <input id="pw" className="input" type="password" required minLength={8} autoComplete="new-password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} aria-describedby="pw-hint" />
               <span id="pw-hint" className="hint">
-                לפחות 8 תווים
+                At least 8 characters
               </span>
             </div>
             <div className="field">
-              <label htmlFor="slug">הקישור של העסק</label>
-              <div className="input-group" dir="ltr">
+              <label htmlFor="slug">Your booking link</label>
+              <div className="input-group">
                 <span className="addon">torim.app/b/</span>
                 <input
                   id="slug"
@@ -416,16 +418,16 @@ export default function Signup({ onDone }: { onDone: (token: string) => void }) 
                 />
               </div>
               <span id="slug-hint" className="hint" aria-live="polite" style={{ color: slugState === "ok" ? "var(--ok)" : slugState === "idle" ? undefined : "var(--danger)" }}>
-                {slugState === "ok" ? "✓ פנוי" : slugState === "taken" ? "הקישור הזה תפוס" : slugState === "invalid" ? "אותיות באנגלית, ספרות ומקפים, 3 עד 40 תווים" : "את הקישור הזה תשלחו ללקוחות"}
+                {slugState === "ok" ? "Available" : slugState === "taken" ? "That link is taken" : slugState === "invalid" ? "Latin letters, digits and dashes, 3 to 40 characters" : "This is the link you send to clients"}
               </span>
             </div>
             {error && <div className="alert error" role="alert">{error}</div>}
             <div className="row between">
               <button type="button" className="btn ghost" onClick={() => setStep(2)}>
-                חזרה
+                Back
               </button>
-              <button className="btn lg" disabled={busy || slugState === "taken" || slugState === "invalid"}>
-                {busy ? "פותח את העסק…" : "פתיחת העסק"}
+              <button className="btn cta lg" disabled={busy || slugState === "taken" || slugState === "invalid"}>
+                {busy ? "Opening your calendar…" : "Open my calendar"}
               </button>
             </div>
           </form>

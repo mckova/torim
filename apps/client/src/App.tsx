@@ -13,10 +13,13 @@ export default function App() {
     <>
       <header className="topbar">
         <Link to="/" className="brand">
-          TORIM
+          <span className="brand-mark" aria-hidden>
+            t
+          </span>
+          torim
         </Link>
-        <Link to="/business" className="small">
-          לבעלי עסקים
+        <Link to="/business" className="for-biz">
+          For businesses
         </Link>
       </header>
       <main className="shell">
@@ -26,15 +29,15 @@ export default function App() {
           <Route path="/manage/:uid" element={<Manage />} />
           <Route path="/me" element={<MyBookings />} />
           <Route path="/ticket/:uid" element={<TicketPage />} />
-          <Route path="*" element={<div className="empty">העמוד לא נמצא</div>} />
+          <Route path="*" element={<div className="empty">Page not found</div>} />
         </Routes>
       </main>
-      <nav className="bottom-nav" aria-label="ניווט">
+      <nav className="bottom-nav" aria-label="Main">
         <NavLink to="/" end>
-          עסקים
+          Businesses
         </NavLink>
         <NavLink to="/me">
-          התורים שלי
+          My bookings
         </NavLink>
       </nav>
     </>

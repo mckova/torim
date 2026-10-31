@@ -38,14 +38,14 @@ def manage_link(booking: Booking) -> str:
 
 
 TEMPLATES = {
-    "booked": "שלום {name}, התור שלך ל{service} אצל {provider} נקבע ל-{when}. לניהול התור: {link}",
-    "pending": "שלום {name}, בקשת התור ל{service} ב-{when} התקבלה וממתינה לאישור. נעדכן בהקדם.",
-    "confirmed": "שלום {name}, התור שלך ל{service} ב-{when} אושר. לניהול התור: {link}",
-    "cancelled": "שלום {name}, התור ל{service} ב-{when} בוטל.",
-    "rescheduled": "שלום {name}, התור שלך הועבר ל-{when} ({service} אצל {provider}). {link}",
-    "reminder_24h": "תזכורת: מחר ב-{when} יש לך תור ל{service} אצל {provider}. לביטול או שינוי: {link}",
-    "reminder_2h": "תזכורת: בעוד שעתיים ({when}) התור שלך ל{service}. מחכים לך!",
-    "provider_new": "תור חדש: {name} ל{service} ב-{when}.",
+    "booked": "Hi {name}, you're booked for {service} with {provider} on {when}. Manage it here: {link}",
+    "pending": "Hi {name}, we got your request for {service} on {when}. It's waiting for approval and we'll update you soon.",
+    "confirmed": "Hi {name}, your {service} on {when} is confirmed. Manage it here: {link}",
+    "cancelled": "Hi {name}, your {service} on {when} was cancelled.",
+    "rescheduled": "Hi {name}, your appointment moved to {when} ({service} with {provider}). {link}",
+    "reminder_24h": "Reminder: tomorrow at {when} you have {service} with {provider}. To change or cancel: {link}",
+    "reminder_2h": "Reminder: your {service} is in two hours ({when}). See you soon!",
+    "provider_new": "New booking: {name}, {service}, {when}.",
 }
 
 

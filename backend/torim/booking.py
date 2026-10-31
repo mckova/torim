@@ -375,8 +375,8 @@ def _offer_freed_slot(db: Session, b: Booking, freed_start: datetime | None = No
             b.business_id,
             e.customer.phone,
             "waitlist_offer",
-            f"שלום {e.customer.name}, התפנה מקום ל{e.service.name} בתאריך {day.strftime('%d/%m')}. "
-            f"מי שמזמין ראשון מקבל: {nt.PUBLIC_URL}/b/{b.provider.business.slug}?service={b.service_id}&date={day}",
+            f"Hi {e.customer.name}, a spot opened up for {e.service.name} on {day.strftime('%d/%m')}. "
+            f"First to book gets it: {nt.PUBLIC_URL}/b/{b.provider.business.slug}?service={b.service_id}&date={day}",
         )
 
 
@@ -407,8 +407,8 @@ def offer_free_time(db: Session, business: Business, day: date, provider_ids: li
             business.id,
             e.customer.phone,
             "waitlist_offer",
-            f"שלום {e.customer.name}, יש מקום פנוי ל{e.service.name} בתאריך {day.strftime('%d/%m')}. "
-            f"מי שמזמין ראשון מקבל: {nt.PUBLIC_URL}/b/{business.slug}?service={e.service_id}&date={day}",
+            f"Hi {e.customer.name}, there is a free spot for {e.service.name} on {day.strftime('%d/%m')}. "
+            f"First to book gets it: {nt.PUBLIC_URL}/b/{business.slug}?service={e.service_id}&date={day}",
         )
         sent += 1
     db.commit()
@@ -481,7 +481,7 @@ def advance_ticket(db: Session, t: QueueTicket, to: str, provider_id: int | None
     if to == "called":
         t.called_at, t.provider_id = now_utc(), provider_id
         if t.phone:
-            nt.notify_text(db, t.business_id, t.phone, "queue_called", f"{t.name}, הגיע תורך! מספר {t.number}.")
+            nt.notify_text(db, t.business_id, t.phone, "queue_called", f"{t.name}, you're up! Number {t.number}.")
     if to in ("done", "left"):
         t.finished_at = now_utc()
     db.commit()

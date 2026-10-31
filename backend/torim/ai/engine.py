@@ -134,7 +134,7 @@ def run_turn(
         messages.append({"role": "assistant", "content": content})
 
         if response.stop_reason == "refusal":
-            return TurnResult("מצטערים, אני לא יכול לעזור בזה. אפשר לנסות לנסח אחרת או לפנות לבית העסק.", messages, actions, calls)
+            return TurnResult("Sorry, I can't help with that. Try phrasing it differently, or contact the business.", messages, actions, calls)
         if response.stop_reason == "pause_turn":
             continue
         if response.stop_reason != "tool_use":
@@ -162,7 +162,7 @@ def run_turn(
                 results.append({"type": "tool_result", "tool_use_id": block["id"], "content": f"Error: {detail}", "is_error": True})
         messages.append({"role": "user", "content": results})
 
-    return TurnResult("מצטערים, לא הצלחתי לסיים את הבקשה. נסו שוב או פנו לבית העסק.", messages, actions, calls)
+    return TurnResult("Sorry, I couldn't finish that request. Try again, or contact the business.", messages, actions, calls)
 
 
 def structured(*, system: str, user_text: str, schema: dict, effort: str = "medium", max_tokens: int = 8000) -> dict:

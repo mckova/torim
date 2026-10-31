@@ -170,7 +170,7 @@ def request_otp(slug: str, body: OtpIn, db: Session = Depends(get_db)):
     phone = bk.normalize_phone(body.phone)
     code = f"{secrets.randbelow(10**6):06d}"
     db.add(OtpCode(business_id=b.id, phone=phone, code=code, expires_at=now_utc() + timedelta(minutes=10)))
-    notify_text(db, b.id, phone, "otp", f"קוד הכניסה שלך ל{b.name}: {code}")
+    notify_text(db, b.id, phone, "otp", f"Your sign-in code for {b.name}: {code}")
     db.commit()
     out = {"sent": True}
     if os.environ.get("TORIM_DEV_OTP", "1") == "1":

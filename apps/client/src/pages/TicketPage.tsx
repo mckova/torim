@@ -5,11 +5,11 @@ import { api } from "../api";
 import { ErrorBox, Spinner } from "../components";
 
 const LABEL: Record<Ticket["status"], string> = {
-  waiting: "ממתינים",
-  called: "הגיע תורך! גשו לעמדה",
-  serving: "בטיפול",
-  done: "הסתיים. תודה!",
-  left: "יצאת מהתור",
+  waiting: "Waiting",
+  called: "You're up! Come to the desk",
+  serving: "In the chair",
+  done: "Done. Thank you!",
+  left: "You left the queue",
 };
 
 export default function TicketPage() {
@@ -31,7 +31,7 @@ export default function TicketPage() {
   if (!t) return error ? <ErrorBox error={error} /> : <Spinner />;
   return (
     <div className="stack center">
-      <span className="muted">המספר שלך</span>
+      <span className="muted">Your number</span>
       <div className="ticket-number">{t.number}</div>
       <span className={`chip ${t.status === "called" ? "confirmed" : "accent"}`} style={{ alignSelf: "center", fontSize: "1rem" }}>
         {LABEL[t.status]}
@@ -39,19 +39,19 @@ export default function TicketPage() {
       {t.status === "waiting" && (
         <div className="grid two">
           <div className="card stack tight">
-            <span className="small muted">לפניך</span>
+            <span className="small muted">Ahead of you</span>
             <b style={{ fontSize: "1.8rem" }}>{(t.position ?? 1) - 1}</b>
           </div>
           <div className="card stack tight">
-            <span className="small muted">זמן משוער</span>
-            <b style={{ fontSize: "1.8rem" }}>{t.eta_minutes ? `~${t.eta_minutes} דק׳` : "עכשיו"}</b>
+            <span className="small muted">Estimated wait</span>
+            <b style={{ fontSize: "1.8rem" }}>{t.eta_minutes ? `~${t.eta_minutes} min` : "Now"}</b>
           </div>
         </div>
       )}
-      <p className="small muted">{t.service.name} · הדף מתעדכן אוטומטית</p>
+      <p className="small muted">{t.service.name}. This page updates by itself.</p>
       {t.status === "waiting" && (
         <button className="btn danger" onClick={() => api.post<Ticket>(`/api/queue/${uid}/leave`).then(setT)}>
-          יציאה מהתור
+          Leave the queue
         </button>
       )}
     </div>

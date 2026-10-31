@@ -14,11 +14,11 @@ from . import engine
 from .engine import obj
 
 CATEGORIES = {
-    "barber": "מספרה",
-    "beauty": "קוסמטיקה וציפורניים",
-    "clinic": "קליניקה / טיפולים",
-    "fitness": "סטודיו / כושר",
-    "other": "אחר",
+    "barber": "Barbershop",
+    "beauty": "Beauty and nails",
+    "clinic": "Clinic and treatments",
+    "fitness": "Studio and fitness",
+    "other": "Other",
 }
 
 # weekday: 0 = Monday ... 6 = Sunday (Python convention)
@@ -46,29 +46,29 @@ def _svc(name, duration, price, description="", buffer_after=0, capacity=1, requ
 
 TEMPLATES: dict[str, dict] = {
     "barber": {
-        "services": [_svc("תספורת גבר", 30, 90, "כולל חפיפה וסידור", 5), _svc("עיצוב זקן", 20, 50), _svc("תספורת + זקן", 45, 130, "", 5), _svc("תספורת ילדים", 25, 70)],
+        "services": [_svc("Men's haircut", 30, 90, "Includes wash and styling", 5), _svc("Beard trim", 20, 50), _svc("Cut and beard", 45, 130, "", 5), _svc("Kids cut", 25, 70)],
         "days": _week("09:00", "19:00", ("08:30", "14:00"), ("13:00", "13:45")),
-        "accent_color": "#0f766e",
+        "accent_color": "#e0336f",
     },
     "beauty": {
-        "services": [_svc("מניקור ג׳ל", 60, 150, "", 10), _svc("פדיקור", 60, 170, "", 10), _svc("עיצוב גבות", 20, 70), _svc("טיפול פנים", 75, 320, "", 15)],
+        "services": [_svc("Gel manicure", 60, 150, "", 10), _svc("Pedicure", 60, 170, "", 10), _svc("Brow shaping", 20, 70), _svc("Facial", 75, 320, "", 15)],
         "days": _week("10:00", "19:00", ("09:00", "14:00"), ("14:00", "14:30")),
         "accent_color": "#db2777",
     },
     "clinic": {
-        "services": [_svc("פגישת אבחון ראשונה", 60, 350, "פגישת היכרות והערכה", 10, 1, True), _svc("טיפול", 45, 300, "", 10), _svc("פגישת מעקב", 30, 200, "", 5)],
+        "services": [_svc("First assessment", 60, 350, "Getting to know you and an assessment", 10, 1, True), _svc("Treatment", 45, 300, "", 10), _svc("Follow-up", 30, 200, "", 5)],
         "days": _week("08:00", "18:00", None, ("12:30", "13:15")),
         "accent_color": "#2563eb",
     },
     "fitness": {
-        "services": [_svc("שיעור קבוצתי", 55, 70, "עד 8 משתתפים", 5, 8), _svc("אימון אישי", 60, 250, "", 10), _svc("שיעור ניסיון", 55, 0, "לנרשמים חדשים", 5, 8, True)],
+        "services": [_svc("Group class", 55, 70, "Up to 8 people", 5, 8), _svc("Personal training", 60, 250, "", 10), _svc("Trial class", 55, 0, "For new members", 5, 8, True)],
         "days": _week("07:00", "21:00", ("08:00", "13:00"), ("13:00", "16:00")),
         "accent_color": "#7c3aed",
     },
     "other": {
-        "services": [_svc("פגישה", 30, 100), _svc("פגישה ארוכה", 60, 180, "", 10)],
+        "services": [_svc("Appointment", 30, 100), _svc("Long appointment", 60, 180, "", 10)],
         "days": _week("09:00", "18:00", ("09:00", "13:00")),
-        "accent_color": "#0f766e",
+        "accent_color": "#e0336f",
     },
 }
 
@@ -76,7 +76,7 @@ _HHMM = re.compile(r"^([01][0-9]|2[0-3]):[0-5][0-9]$")
 _T = {"type": "string", "description": "HH:MM, 24h"}
 SCHEMA = obj(
     {
-        "description": {"type": "string", "description": "One or two warm Hebrew sentences for the public booking page"},
+        "description": {"type": "string", "description": "One or two warm sentences for the public booking page"},
         "accent_color": {"type": "string", "description": "Brand color as #rrggbb that fits the business"},
         "services": {
             "type": "array",
@@ -103,12 +103,12 @@ SCHEMA = obj(
                 }
             ),
         },
-        "notes": {"type": "string", "description": "Short Hebrew note on assumptions you made, or empty"},
+        "notes": {"type": "string", "description": "Short note on assumptions you made, or empty"},
     }
 )
 
 SYSTEM = """You set up an online booking page for a small Israeli service business.
-From the owner's description (usually Hebrew, sometimes messy or partial), propose:
+From the owner's description (English or Hebrew, sometimes messy or partial), propose:
 - The services they offer, with realistic durations and Israeli market prices in ILS when not stated.
   Keep the owner's own service names. Use capacity > 1 only for group classes. Use buffer_after for
   cleanup/prep time when the trade needs it. Use requires_confirmation only for services the owner
@@ -116,9 +116,9 @@ From the owner's description (usually Hebrew, sometimes messy or partial), propo
 - Weekly opening hours. The Israeli work week is Sunday to Thursday, Friday is usually short, and most
   businesses are closed on Saturday unless the owner says otherwise. Add a lunch break when typical.
   Weekday numbers: 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday.
-- A one or two sentence public description in natural Hebrew, and a fitting brand color.
+- A one or two sentence public description in natural English, and a fitting brand color.
 Respect everything the owner states explicitly; fill only what is missing, and mention the main
-assumptions in `notes` (Hebrew, one sentence). Write all customer-facing text in Hebrew. Use plain punctuation (commas and periods), never an em dash."""
+assumptions in `notes` (one sentence). Write all customer-facing text in English; keep the owner's own service names as they wrote them. Use plain punctuation (commas and periods), never an em dash."""
 
 
 def _clean(p: dict) -> dict:
@@ -147,7 +147,7 @@ def _clean(p: dict) -> dict:
     color = p.get("accent_color", "")
     return {
         "description": p.get("description", "")[:400],
-        "accent_color": color if re.fullmatch(r"#[0-9a-fA-F]{6}", color or "") else "#0f766e",
+        "accent_color": color if re.fullmatch(r"#[0-9a-fA-F]{6}", color or "") else "#e0336f",
         "services": services,
         "days": sorted(days, key=lambda d: (d["weekday"] - 6) % 7),
         "notes": p.get("notes", ""),

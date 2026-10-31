@@ -7,7 +7,7 @@ a concrete action in the app; without an API key the same facts are ranked by
 rules, so the panel is never empty.
 
 Personal reminders: for a booking with a high no-show risk, Claude drafts a
-short, warm WhatsApp message in Hebrew that fits this customer (first visit,
+short, warm WhatsApp message that fits this customer (first visit,
 regular, past no-shows) and the business tone. The owner edits and sends.
 """
 from __future__ import annotations
@@ -29,13 +29,13 @@ ACTIONS = ["remind", "confirm", "offer_slot", "open_booking", "none"]
 
 SCHEMA = obj(
     {
-        "headline": {"type": "string", "description": "One short Hebrew sentence: the state of the day"},
+        "headline": {"type": "string", "description": "One short sentence: the state of the day"},
         "items": {
             "type": "array",
             "description": "At most 5 items, most important first",
             "items": obj(
                 {
-                    "text": {"type": "string", "description": "Hebrew, one sentence, specific (names, times)"},
+                    "text": {"type": "string", "description": "One sentence, specific (names, times)"},
                     "kind": {"type": "string", "enum": ["risk", "approval", "waitlist", "gap", "queue", "tip"]},
                     "action": {"type": "string", "enum": ACTIONS},
                     "booking_id": {"type": ["integer", "null"]},
@@ -46,7 +46,7 @@ SCHEMA = obj(
 )
 
 SYSTEM = """You are the operations assistant inside TORIM, a booking app for small Israeli service
-businesses. Each morning you brief the owner (or a staff member) about their day in Hebrew. Use plain punctuation (commas and periods), never an em dash.
+businesses. Each morning you brief the owner (or a staff member) about their day in English. Use plain punctuation (commas and periods), never an em dash.
 You get today's facts as JSON. Produce a headline and at most five items, most valuable first:
 money at risk (likely no-shows, unconfirmed requests), opportunities (people on the waitlist while
 there is free time, empty stretches worth filling), and one practical tip when the data supports it.
@@ -116,17 +116,17 @@ def _facts(db: Session, me: Provider) -> dict:
 def _rules(f: dict) -> dict:
     items = []
     for r in f["no_show_risks"][:2]:
-        items.append({"kind": "risk", "action": "remind", "booking_id": r["booking_id"], "text": f"{r['customer']} ({r['when']}) בסיכון לא להגיע ({round(r['probability'] * 100)}%). כדאי לשלוח תזכורת אישית."})
+        items.append({"kind": "risk", "action": "remind", "booking_id": r["booking_id"], "text": f"{r['customer']} ({r['when']}) might not show up ({round(r['probability'] * 100)}%). A personal reminder could help."})
     for p in f["pending_requests"][:2]:
-        items.append({"kind": "approval", "action": "confirm", "booking_id": p["booking_id"], "text": f"{p['customer']} מחכה לאישור ל{p['service']} ב-{p['when']}."})
+        items.append({"kind": "approval", "action": "confirm", "booking_id": p["booking_id"], "text": f"{p['customer']} is waiting for approval: {p['service']}, {p['when']}."})
     if f["waitlist"] and f["free_time_today"]:
-        items.append({"kind": "waitlist", "action": "offer_slot", "booking_id": None, "text": f"{len(f['waitlist'])} ממתינים ברשימת ההמתנה ויש היום זמן פנוי. אפשר להציע להם."})
+        items.append({"kind": "waitlist", "action": "offer_slot", "booking_id": None, "text": f"{len(f['waitlist'])} people are on the waitlist and there is free time today. Offer it to them."})
     for g in f["free_time_today"][:1]:
-        items.append({"kind": "gap", "action": "none", "booking_id": None, "text": f"ל{g['provider']} יש היום {g['free_slots_of_shortest_service']} חלונות פנויים."})
+        items.append({"kind": "gap", "action": "none", "booking_id": None, "text": f"{g['provider']} has {g['free_slots_of_shortest_service']} open slots today."})
     if f["walk_in_queue"]["waiting"]:
-        items.append({"kind": "queue", "action": "none", "booking_id": None, "text": f"{f['walk_in_queue']['waiting']} ממתינים בתור החי."})
+        items.append({"kind": "queue", "action": "none", "booking_id": None, "text": f"{f['walk_in_queue']['waiting']} waiting in the walk-in queue."})
     n = f["today"]["bookings"]
-    head = f"היום {n} תורים, {f['today']['first']}–{f['today']['last']}." if n else "אין תורים היום עדיין."
+    head = f"{n} appointments today, {f['today']['first']} to {f['today']['last']}." if n else "No appointments today yet."
     return {"headline": head, "items": items[:5]}
 
 
@@ -162,9 +162,9 @@ def briefing(db: Session, me: Provider, refresh: bool = False) -> dict:
 
 
 # ---------------------------------------------------------------- personal reminder
-REMINDER_SCHEMA = obj({"message": {"type": "string", "description": "The WhatsApp message, Hebrew, 2-3 short sentences"}})
+REMINDER_SCHEMA = obj({"message": {"type": "string", "description": "The WhatsApp message, 2-3 short sentences, in the language of the customer's name (English by default, Hebrew for a Hebrew name)"}})
 
-REMINDER_SYSTEM = """You write a short personal WhatsApp reminder, in Hebrew, from a small Israeli business
+REMINDER_SYSTEM = """You write a short personal WhatsApp reminder from a small Israeli business
 to a customer with an upcoming appointment. Warm, natural and brief (2-3 sentences, at most one emoji),
 in the voice of the business. Mention the service, day and time. Ask the customer to confirm by
 replying, and include the manage link given to you exactly once so they can reschedule or cancel
@@ -177,7 +177,7 @@ def reminder_draft(db: Session, booking: Booking) -> dict:
     tz = ZoneInfo(b.timezone)
     local = booking.start.astimezone(tz)
     days = (local.date() - bk.today(b)).days
-    when = {0: "היום", 1: "מחר"}.get(days, local.strftime("%d/%m"))
+    when = {0: "today", 1: "tomorrow"}.get(days, local.strftime("%d/%m"))
     link = manage_link(booking)
     past = db.scalars(select(Booking).where(Booking.customer_id == booking.customer_id, Booking.start < booking.start, Booking.status.in_(["completed", "no_show"]))).all()
     if engine.enabled():
@@ -204,6 +204,6 @@ def reminder_draft(db: Session, booking: Booking) -> dict:
                 msg = f"{msg}\n{link}"
             return {"source": "ai", "message": msg}
     first = booking.customer.name.split()[0]
-    msg = f"היי {first}, מזכירים שיש לך {when} ב-{local.strftime('%H:%M')} תור ל{booking.service.name} ב{b.name}. נשמח אם תאשר/י בהודעה חוזרת 🙏 לשינוי או ביטול: {link}"
+    msg = f"Hi {first}, a reminder that you're booked {when} at {local.strftime('%H:%M')} for {booking.service.name} at {b.name}. Reply to confirm, or change or cancel here: {link}"
     return {"source": "template", "message": msg}
 

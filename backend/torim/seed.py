@@ -29,8 +29,8 @@ from .models import (
     now_utc,
 )
 
-FIRST = ["נועה", "איתי", "מאיה", "יונתן", "שירה", "עומר", "תמר", "אורי", "רוני", "דניאל", "ליה", "אלון", "הילה", "גיא", "עדי", "יואב", "מיכל", "נדב", "אביגיל", "רועי"]
-LAST = ["כהן", "לוי", "מזרחי", "פרץ", "ביטון", "אברהם", "פרידמן", "שפירא", "דהן", "אזולאי"]
+FIRST = ["Noa", "Itai", "Maya", "Yonatan", "Shira", "Omer", "Tamar", "Uri", "Roni", "Daniel", "Lia", "Alon", "Hila", "Guy", "Adi", "Yoav", "Michal", "Nadav", "Avigail", "Roy"]
+LAST = ["Cohen", "Levi", "Mizrahi", "Peretz", "Biton", "Avraham", "Friedman", "Shapira", "Dahan", "Azulay"]
 
 
 def _hours(p: Provider, plan: dict[int, tuple[str, str]], breaks: dict[int, tuple[str, str]] | None = None):
@@ -50,50 +50,50 @@ def build(db) -> None:
 
     barber = Business(
         slug="gal-barbers",
-        name="מספרת גל",
-        category="מספרה",
-        description="מספרת גברים ונשים בלב תל אביב. תספורות, זקן וצבע.",
-        address="דיזנגוף 120, תל אביב",
+        name="Gal Barbers",
+        category="Barbershop",
+        description="A barbershop for men and women in the heart of Tel Aviv. Cuts, beards and colour.",
+        address="120 Dizengoff St, Tel Aviv",
         phone="03-5551234",
-        accent_color="#0f766e",
+        accent_color="#e0336f",
     )
     studio = Business(
         slug="neshima-studio",
-        name="סטודיו נשימה",
-        category="פילאטיס ופיזיותרפיה",
-        description="שיעורי פילאטיס בקבוצות קטנות וטיפולי פיזיותרפיה פרטניים.",
-        address="הרצל 45, רמת גן",
+        name="Neshima Studio",
+        category="Pilates and physiotherapy",
+        description="Small-group Pilates classes and one-to-one physiotherapy.",
+        address="45 Herzl St, Ramat Gan",
         phone="03-5559876",
-        accent_color="#7a3e5c",
+        accent_color="#b2457a",
     )
     db.add_all([barber, studio])
     db.flush()
 
-    gal = Provider(business=barber, name="גל אברהם", title="בעלים, ספר ראשי", email="owner@barber.demo", password_hash=pw, role="owner", color="#2f6f62")
-    dana = Provider(business=barber, name="דנה שגיא", title="ספרית וצבע", email="dana@barber.demo", password_hash=pw, color="#9a6a16")
-    moshe = Provider(business=barber, name="משה לוי", title="ספר", email="moshe@barber.demo", password_hash=pw, color="#7a3e5c")
+    gal = Provider(business=barber, name="Gal Avraham", title="Owner, head barber", email="owner@barber.demo", password_hash=pw, role="owner", color="#e0336f")
+    dana = Provider(business=barber, name="Dana Sagi", title="Stylist and colour", email="dana@barber.demo", password_hash=pw, color="#e8692c")
+    moshe = Provider(business=barber, name="Moshe Levi", title="Barber", email="moshe@barber.demo", password_hash=pw, color="#c99400")
     _hours(gal, SUN_THU, LUNCH)
     _hours(dana, {k: v for k, v in SUN_THU.items() if k != 4}, LUNCH)
     _hours(moshe, {6: ("12:00", "20:00"), 0: ("12:00", "20:00"), 2: ("12:00", "20:00"), 3: ("12:00", "21:00"), 4: ("08:30", "14:00")})
 
-    cut = Service(business=barber, name="תספורת גבר", duration=30, price=90, buffer_after=5, min_notice=60, description="כולל חפיפה וסידור")
-    beard = Service(business=barber, name="עיצוב זקן", duration=20, price=50, min_notice=30)
-    combo = Service(business=barber, name="תספורת + זקן", duration=45, price=130, buffer_after=5)
-    women = Service(business=barber, name="תספורת אישה", duration=60, price=180, buffer_after=10)
-    color = Service(business=barber, name="צבע שורשים", duration=90, price=280, buffer_after=15, min_notice=24 * 60, requires_confirmation=True, description="מצריך אישור, לבדיקת התאמה")
+    cut = Service(business=barber, name="Men's haircut", duration=30, price=90, buffer_after=5, min_notice=60, description="Includes wash and styling")
+    beard = Service(business=barber, name="Beard trim", duration=20, price=50, min_notice=30)
+    combo = Service(business=barber, name="Cut and beard", duration=45, price=130, buffer_after=5)
+    women = Service(business=barber, name="Women's cut", duration=60, price=180, buffer_after=10)
+    color = Service(business=barber, name="Root colour", duration=90, price=280, buffer_after=15, min_notice=24 * 60, requires_confirmation=True, description="Needs approval, so we can check it suits you")
     cut.providers = [gal, dana, moshe]
     beard.providers = [gal, moshe]
     combo.providers = [gal, moshe]
     women.providers = [dana]
     color.providers = [dana]
 
-    noa = Provider(business=studio, name="נועה ברק", title="בעלים, מדריכת פילאטיס", email="owner@studio.demo", password_hash=pw, role="owner", color="#2f6f62")
-    yoni = Provider(business=studio, name="יוני כץ", title="פיזיותרפיסט", email="yoni@studio.demo", password_hash=pw, color="#9b4a2c")
+    noa = Provider(business=studio, name="Noa Barak", title="Owner, Pilates instructor", email="owner@studio.demo", password_hash=pw, role="owner", color="#b2457a")
+    yoni = Provider(business=studio, name="Yoni Katz", title="Physiotherapist", email="yoni@studio.demo", password_hash=pw, color="#e8692c")
     _hours(noa, {6: ("07:00", "21:00"), 0: ("07:00", "21:00"), 1: ("07:00", "21:00"), 2: ("07:00", "21:00"), 3: ("07:00", "21:00"), 4: ("08:00", "12:00")}, {wd: ("12:00", "16:00") for wd in (6, 0, 1, 2, 3)})
     _hours(yoni, {6: ("08:00", "16:00"), 0: ("08:00", "16:00"), 1: ("12:00", "20:00"), 2: ("08:00", "16:00"), 3: ("12:00", "20:00")})
-    pilates = Service(business=studio, name="פילאטיס מכשירים (קבוצה)", duration=55, price=120, buffer_after=5, capacity=6, min_notice=120, description="עד 6 משתתפים")
-    intro = Service(business=studio, name="שיעור היכרות פרטי", duration=45, price=150, min_notice=24 * 60)
-    physio = Service(business=studio, name="טיפול פיזיותרפיה", duration=45, price=320, buffer_after=15, requires_confirmation=True)
+    pilates = Service(business=studio, name="Reformer Pilates (group)", duration=55, price=120, buffer_after=5, capacity=6, min_notice=120, description="Up to 6 people")
+    intro = Service(business=studio, name="Private intro session", duration=45, price=150, min_notice=24 * 60)
+    physio = Service(business=studio, name="Physiotherapy session", duration=45, price=320, buffer_after=15, requires_confirmation=True)
     pilates.providers = [noa]
     intro.providers = [noa]
     physio.providers = [yoni]

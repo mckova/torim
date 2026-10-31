@@ -24,7 +24,7 @@ export function useAccent(color?: string) {
 
 export function Steps({ step, total }: { step: number; total: number }) {
   return (
-    <div className="steps" aria-label={`שלב ${step + 1} מתוך ${total}`}>
+    <div className="steps" aria-label={`Step ${step + 1} of ${total}`}>
       {Array.from({ length: total }, (_, i) => (
         <span key={i} className={i <= step ? "on" : ""} />
       ))}
@@ -82,9 +82,9 @@ export function SlotPicker({
 
   const groups = slots
     ? [
-        { label: "בוקר", items: slots.filter((s) => +time(s.start).slice(0, 2) < 12) },
-        { label: "צהריים", items: slots.filter((s) => +time(s.start).slice(0, 2) >= 12 && +time(s.start).slice(0, 2) < 17) },
-        { label: "ערב", items: slots.filter((s) => +time(s.start).slice(0, 2) >= 17) },
+        { label: "Morning", items: slots.filter((s) => +time(s.start).slice(0, 2) < 12) },
+        { label: "Afternoon", items: slots.filter((s) => +time(s.start).slice(0, 2) >= 12 && +time(s.start).slice(0, 2) < 17) },
+        { label: "Evening", items: slots.filter((s) => +time(s.start).slice(0, 2) >= 17) },
       ].filter((g) => g.items.length)
     : [];
 
@@ -99,9 +99,9 @@ export function SlotPicker({
             const f = dayShort(d.date);
             return (
               <button key={d.date} className={`day ${d.date === date ? "selected" : ""}`} onClick={() => setDate(d.date)}>
-                <span className="tiny muted">{d.date === isoDate() ? "היום" : d.date === addDays(isoDate(), 1) ? "מחר" : f.weekday}</span>
+                <span className="tiny muted">{d.date === isoDate() ? "Today" : d.date === addDays(isoDate(), 1) ? "Tmrw" : f.weekday}</span>
                 <b>{f.day}</b>
-                <span className="tiny muted">{d.slots ? `${d.slots} פנויים` : "מלא"}</span>
+                <span className="tiny muted">{d.slots ? `${d.slots} free` : "Full"}</span>
               </button>
             );
           })}
@@ -110,10 +110,10 @@ export function SlotPicker({
       {date && !slots && <Spinner />}
       {slots && slots.length === 0 && (
         <div className="card flat center stack">
-          <p>אין שעות פנויות ביום הזה.</p>
+          <p>No free times on this day.</p>
           {onNoSlots && (
             <button className="btn soft" onClick={() => onNoSlots(date!)}>
-              הצטרפות לרשימת המתנה ליום הזה
+              Join the waitlist for this day
             </button>
           )}
         </div>
@@ -148,7 +148,7 @@ export function icsHref(title: string, start: string, end: string, location: str
   const body = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//TORIM//HE",
+    "PRODID:-//TORIM//EN",
     "BEGIN:VEVENT",
     `UID:${f(start)}-${Math.random().toString(36).slice(2)}@torim`,
     `DTSTAMP:${f(new Date().toISOString())}`,

@@ -9,7 +9,7 @@ function ctor(): (new () => Recognition) | null {
 }
 
 /** Hebrew speech-to-text through the browser's speech recognition (Chrome, Edge, Safari). */
-export function useDictation(onText: (text: string, final: boolean) => void, lang = "he-IL") {
+export function useDictation(onText: (text: string, final: boolean) => void, lang = "en-US") {
   const [listening, setListening] = useState(false);
   const rec = useRef<Recognition | null>(null);
   const cb = useRef(onText);

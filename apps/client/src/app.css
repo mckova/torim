@@ -1,44 +1,57 @@
-.shell { max-width: 600px; margin: 0 auto; padding: 0.5rem 1.1rem 5.5rem; }
+/* TORIM for clients: one glass column on the warm canvas, thumb-first. */
+.shell { max-width: 620px; margin: 0 auto; padding: 0.5rem 1rem 6.5rem; }
 .topbar {
-  position: sticky; top: 0; z-index: var(--z-sticky);
-  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  position: sticky; top: 10px; z-index: var(--z-sticky);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.9rem 1.1rem; max-width: 600px; margin: 0 auto; border-bottom: 1px solid var(--rule);
+  margin: 10px auto 0; max-width: 620px; padding: 6px 8px 6px 6px;
+  background: rgb(255 255 255 / 0.7); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-edge); border-radius: var(--r-pill); box-shadow: 0 12px 30px -20px rgb(90 30 60 / 0.35);
 }
-.brand { font-weight: 700; color: var(--ink); letter-spacing: 0.06em; font-size: 0.95rem; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ink); letter-spacing: -0.03em; font-size: 1.05rem; text-decoration: none; }
+.brand-mark { width: 34px; height: 34px; border-radius: 12px; background: var(--sunset); color: #fff; display: grid; place-items: center; font-size: 0.95rem; }
+.topbar .for-biz { font-size: 0.85rem; font-weight: 500; text-decoration: none; padding: 0.45rem 0.9rem; border-radius: var(--r-pill); color: var(--ink-2); }
+.topbar .for-biz:hover { background: #fff; color: var(--ink); }
 
-.home-head { padding-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
-.home-head h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; }
-.home-head p { max-width: 42ch; line-height: 1.6; }
-.list-title { font-size: 0.8rem; font-weight: 500; color: var(--muted); padding-bottom: 0.5rem; border-bottom: 2px solid var(--ink); }
-.biz-list { list-style: none; margin: 0; padding: 0; }
-.biz-list a { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid var(--rule); color: inherit; }
+.home-head { padding-top: 1.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.home-head h1 { font-size: 2.3rem; font-weight: 600; letter-spacing: -0.045em; line-height: 1.08; }
+.home-head p { max-width: 44ch; line-height: 1.6; }
+.list-title { font-size: 0.85rem; font-weight: 500; color: var(--muted); padding: 0 0.25rem 0.6rem; }
+.biz-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.biz-list a {
+  display: flex; align-items: center; gap: 0.9rem; padding: 0.85rem 1rem; color: inherit; text-decoration: none;
+  background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--glass-edge); border-radius: 22px;
+  transition: transform 160ms var(--ease-out), background-color 150ms ease;
+}
+.biz-list a:hover { background: var(--glass-strong); }
+.biz-list a:active { transform: scale(0.99); }
 .biz-list a .grow { display: flex; flex-direction: column; gap: 0.1rem; }
-.biz-list .go { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; transition: color 150ms ease; }
-.biz-list a:hover .go { color: var(--ink); text-decoration-color: currentColor; }
+.biz-mono { width: 46px; height: 46px; border-radius: 16px; display: grid; place-items: center; font-weight: 600; color: #fff; flex: none; }
+.biz-list .go { background: var(--ink); color: #fff; padding: 0.4rem 0.9rem; border-radius: var(--r-pill); font-weight: 500; }
 
 .bottom-nav {
-  position: fixed; bottom: 0; inset-inline: 0; background: var(--sheet); border-top: 1px solid var(--rule);
-  display: flex; justify-content: center; gap: 2.5rem; padding: 0.7rem 0 calc(0.7rem + env(safe-area-inset-bottom)); z-index: var(--z-nav);
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: var(--z-nav);
+  display: flex; gap: 4px; padding: 5px; margin-bottom: env(safe-area-inset-bottom);
+  background: rgb(255 255 255 / 0.82); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-edge); border-radius: var(--r-pill); box-shadow: 0 16px 40px -18px rgb(42 21 48 / 0.4);
 }
-.bottom-nav a { font-size: 0.85rem; color: var(--muted); padding: 0.2rem 0.4rem; border-bottom: 2px solid transparent; }
-.bottom-nav a.active { color: var(--ink); font-weight: 500; border-bottom-color: var(--ink); }
+.bottom-nav a { font-size: 0.88rem; font-weight: 500; color: var(--ink-2); padding: 0.6rem 1.3rem; border-radius: var(--r-pill); text-decoration: none; min-height: 44px; display: grid; place-items: center; }
+.bottom-nav a.active { background: var(--ink); color: #fff; }
 
-.ticket-number { font-size: 5.5rem; font-weight: 300; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
-.summary-line { display: flex; justify-content: space-between; gap: 1rem; padding: 0.55rem 0; border-bottom: 1px solid var(--rule-2); }
+.ticket-number { font-size: 6rem; font-weight: 600; line-height: 1; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; background: var(--sunset); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.summary-line { display: flex; justify-content: space-between; gap: 1rem; padding: 0.6rem 0; border-bottom: 1px solid var(--rule-2); }
 .summary-line:last-child { border-bottom: 0; }
 .countdown { font-variant-numeric: tabular-nums; }
 
-/* confirmation: a stamp, like the one a receptionist puts in the book */
+/* confirmation: a quiet check, then the details */
 .done-mark {
-  display: inline-block; margin: 0.5rem auto 0; padding: 0.35rem 0.9rem; border: 2px solid var(--ink); border-radius: var(--r);
-  font-weight: 600; font-size: 0.9rem; letter-spacing: 0.02em; transform: rotate(-3deg);
+  display: inline-flex; align-items: center; gap: 0.5rem; margin: 0.5rem auto 0; padding: 0.45rem 1rem; border-radius: var(--r-pill);
+  font-weight: 600; font-size: 0.92rem; background: var(--sunset); color: #fff; box-shadow: 0 10px 24px -10px rgb(255 77 141 / 0.6);
 }
-.done-mark.pending { border-style: dashed; border-color: var(--amber); color: var(--amber); }
+.done-mark.pending { background: var(--butter-wash); color: var(--amber); box-shadow: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .done-mark { animation: stamp 360ms var(--ease-out) both; }
+  .done-mark { animation: pop 360ms var(--ease-out) both; }
 }
-@keyframes stamp { from { transform: rotate(-3deg) scale(1.25); opacity: 0; } }
-.biz-head { padding-top: 1.5rem; display: flex; flex-direction: column; gap: 0.35rem; padding-bottom: 0.5rem; }
-.biz-head h1 { font-size: 1.8rem; font-weight: 600; letter-spacing: -0.02em; }
+@keyframes pop { from { transform: scale(0.85); opacity: 0; } }
+.biz-head { padding-top: 1.75rem; display: flex; flex-direction: column; gap: 0.4rem; padding-bottom: 0.5rem; }
+.biz-head h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.04em; }
 .biz-head p { line-height: 1.6; max-width: 46ch; margin-top: 0.3rem; }

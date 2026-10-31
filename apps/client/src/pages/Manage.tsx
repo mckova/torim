@@ -33,7 +33,7 @@ export default function Manage() {
     try {
       setBooking(await api.post<Booking>(`/api/manage/${uid}/cancel`, { t, reason }));
       setMode("view");
-      flash("התור בוטל");
+      flash("Booking cancelled");
     } catch (e) {
       setError(e);
     }
@@ -43,7 +43,7 @@ export default function Manage() {
     try {
       setBooking(await api.post<Booking>(`/api/manage/${uid}/reschedule`, { t, start: slot.start }));
       setMode("view");
-      flash("התור הועבר בהצלחה");
+      flash("Booking moved");
     } catch (e) {
       setError(e);
     }
@@ -55,32 +55,32 @@ export default function Manage() {
   return (
     <div className="stack">
       <div className="row between">
-        <h1>התור שלך</h1>
+        <h1>Your booking</h1>
         <span className={`chip ${booking.status}`}>{STATUS_LABEL[booking.status]}</span>
       </div>
       <div className="card">
         <div className="summary-line">
-          <span className="muted">עסק</span>
+          <span className="muted">Business</span>
           <Link to={`/b/${booking.business.slug}`}>
             <b>{booking.business.name}</b>
           </Link>
         </div>
         <div className="summary-line">
-          <span className="muted">שירות</span>
+          <span className="muted">Service</span>
           <b>{booking.service.name}</b>
         </div>
         <div className="summary-line">
-          <span className="muted">מתי</span>
+          <span className="muted">When</span>
           <b>
-            {dayLong(booking.start)} · {time(booking.start)}
+            {dayLong(booking.start)}, {time(booking.start)}
           </b>
         </div>
         <div className="summary-line">
-          <span className="muted">אצל</span>
+          <span className="muted">With</span>
           <b>{booking.provider.name}</b>
         </div>
         <div className="summary-line">
-          <span className="muted">מחיר</span>
+          <span className="muted">Price</span>
           <b>{money(booking.price)}</b>
         </div>
       </div>
@@ -88,14 +88,14 @@ export default function Manage() {
 
       {active && mode === "view" && (
         <div className="stack tight">
-          <a className="btn soft block" href={icsHref(booking.service.name + " - " + booking.business.name, booking.start, booking.end, "")} download="torim.ics">
-            הוספה ליומן
+          <a className="btn soft block" href={icsHref(booking.service.name + ", " + booking.business.name, booking.start, booking.end, "")} download="torim.ics">
+            Add to calendar
           </a>
           <button className="btn ghost block" onClick={() => setMode("move")}>
-            שינוי מועד
+            Change time
           </button>
           <button className="btn danger block" onClick={() => setMode("cancel")}>
-            ביטול התור
+            Cancel booking
           </button>
         </div>
       )}
@@ -103,9 +103,9 @@ export default function Manage() {
       {mode === "move" && (
         <div className="stack">
           <div className="row between">
-            <h2>בחירת מועד חדש</h2>
+            <h2>Pick a new time</h2>
             <button className="btn ghost sm" onClick={() => setMode("view")}>
-              סגירה
+              Close
             </button>
           </div>
           <SlotPicker slug={booking.business.slug} serviceId={booking.service.id} providerId={booking.provider.id} onPick={move} />
@@ -114,15 +114,15 @@ export default function Manage() {
 
       {mode === "cancel" && (
         <div className="card stack">
-          <h2>לבטל את התור?</h2>
-          <p className="small muted">השעה תשוחרר ללקוחות אחרים ברשימת ההמתנה.</p>
-          <input className="input" placeholder="סיבה (לא חובה)" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <h2>Cancel this booking?</h2>
+          <p className="small muted">The time goes back to other clients on the waitlist.</p>
+          <input className="input" placeholder="Reason (optional)" aria-label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />
           <div className="row">
             <button className="btn danger grow" onClick={cancel}>
-              כן, לבטל
+              Yes, cancel
             </button>
             <button className="btn ghost grow" onClick={() => setMode("view")}>
-              לא, להשאיר
+              No, keep it
             </button>
           </div>
         </div>

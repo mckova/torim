@@ -77,7 +77,7 @@ class Business(Base):
     timezone: Mapped[str] = mapped_column(String(60), default="Asia/Jerusalem")
     slot_step: Mapped[int] = mapped_column(Integer, default=15)
     cancel_window_hours: Mapped[int] = mapped_column(Integer, default=3)
-    accent_color: Mapped[str] = mapped_column(String(9), default="#0f766e")
+    accent_color: Mapped[str] = mapped_column(String(9), default="#e0336f")
 
     providers: Mapped[list["Provider"]] = relationship(back_populates="business")
     services: Mapped[list["Service"]] = relationship(back_populates="business")
@@ -92,7 +92,7 @@ class Provider(Base):
     email: Mapped[str] = mapped_column(String(160), unique=True)
     password_hash: Mapped[str] = mapped_column(String(200))
     role: Mapped[str] = mapped_column(String(20), default="staff")  # owner | staff
-    color: Mapped[str] = mapped_column(String(9), default="#0f766e")
+    color: Mapped[str] = mapped_column(String(9), default="#e0336f")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     business: Mapped[Business] = relationship(back_populates="providers")

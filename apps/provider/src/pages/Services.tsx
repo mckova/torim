@@ -25,16 +25,16 @@ export default function Services() {
   const [toast, show] = useToast();
 
   return (
-    <div className="stack">
+    <div className="stack loose">
       <div className="page-head">
-        <h1>שירותים</h1>
+        <h1>Services</h1>
         {isOwner && (
           <button className="btn" onClick={() => setEdit({ ...EMPTY, provider_ids: [data.me.id] })}>
-            שירות חדש
+            New service
           </button>
         )}
       </div>
-      <ol className="svc-list">
+      <ol className="svc-list panel">
         {data.services.map((s) => (
           <li key={s.id} className={s.active ? "" : "off"}>
             <div className="svc-main">
@@ -49,15 +49,15 @@ export default function Services() {
             </div>
             <div className="svc-meta small">
               <span className="num-sans">{duration(s.duration)}</span>
-              {s.buffer_after > 0 && <span className="muted">+{s.buffer_after} דק׳ הכנה</span>}
-              {s.capacity > 1 && <span className="muted">עד {s.capacity} משתתפים</span>}
-              {s.requires_confirmation && <span className="chip pending">דורש אישור</span>}
-              {!s.active && <span className="chip cancelled">מושבת</span>}
+              {s.buffer_after > 0 && <span className="muted">+{s.buffer_after} min prep</span>}
+              {s.capacity > 1 && <span className="muted">Up to {s.capacity} people</span>}
+              {s.requires_confirmation && <span className="chip pending">Needs approval</span>}
+              {!s.active && <span className="chip cancelled">Off</span>}
             </div>
             <b className="svc-price">{money(s.price)}</b>
             {isOwner && (
               <button className="btn link sm" onClick={() => setEdit(s)}>
-                עריכה
+                Edit
               </button>
             )}
           </li>
@@ -70,7 +70,7 @@ export default function Services() {
           onSaved={() => {
             setEdit(null);
             reload();
-            show("השירות נשמר");
+            show("Service saved");
           }}
         />
       )}
@@ -97,54 +97,54 @@ function Editor({ value, onClose, onSaved }: { value: Omit<Service, "id"> & { id
   }
 
   return (
-    <Modal title={s.id ? "עריכת שירות" : "שירות חדש"} onClose={onClose}>
+    <Modal title={s.id ? "Edit service" : "New service"} onClose={onClose}>
       <form className="stack" onSubmit={save}>
         <div className="field">
-          <label>שם</label>
+          <label>Name</label>
           <input className="input" required value={s.name} onChange={(e) => setS({ ...s, name: e.target.value })} />
         </div>
         <div className="field">
-          <label>תיאור</label>
+          <label>Description</label>
           <input className="input" value={s.description} onChange={(e) => setS({ ...s, description: e.target.value })} />
         </div>
         <div className="grid two">
           <div className="field">
-            <label>משך (דקות)</label>
+            <label>Duration (min)</label>
             <input type="number" className="input" min={5} value={s.duration} onChange={num("duration")} />
           </div>
           <div className="field">
-            <label>מחיר (₪)</label>
+            <label>Price (₪)</label>
             <input type="number" className="input" min={0} value={s.price} onChange={num("price")} />
           </div>
           <div className="field">
-            <label>זמן הכנה לפני (דק׳)</label>
+            <label>Prep before (min)</label>
             <input type="number" className="input" min={0} value={s.buffer_before} onChange={num("buffer_before")} />
           </div>
           <div className="field">
-            <label>זמן ניקיון אחרי (דק׳)</label>
+            <label>Cleanup after (min)</label>
             <input type="number" className="input" min={0} value={s.buffer_after} onChange={num("buffer_after")} />
           </div>
           <div className="field">
-            <label>התראה מינימלית (דק׳)</label>
+            <label>Minimum notice (min)</label>
             <input type="number" className="input" min={0} value={s.min_notice} onChange={num("min_notice")} />
           </div>
           <div className="field">
-            <label>אפשר להזמין עד (ימים קדימה)</label>
+            <label>Bookable up to (days ahead)</label>
             <input type="number" className="input" min={1} value={s.max_days_ahead} onChange={num("max_days_ahead")} />
           </div>
           <div className="field">
-            <label>משתתפים בכל מועד</label>
+            <label>People per slot</label>
             <input type="number" className="input" min={1} value={s.capacity} onChange={num("capacity")} />
           </div>
         </div>
         <label className="row small">
-          <input type="checkbox" checked={s.requires_confirmation} onChange={(e) => setS({ ...s, requires_confirmation: e.target.checked })} /> כל הזמנה דורשת אישור ידני
+          <input type="checkbox" checked={s.requires_confirmation} onChange={(e) => setS({ ...s, requires_confirmation: e.target.checked })} /> Every booking needs my approval
         </label>
         <label className="row small">
-          <input type="checkbox" checked={s.active} onChange={(e) => setS({ ...s, active: e.target.checked })} /> פעיל ומוצג ללקוחות
+          <input type="checkbox" checked={s.active} onChange={(e) => setS({ ...s, active: e.target.checked })} /> Active and shown to clients
         </label>
         <div className="field">
-          <label>מי נותן את השירות</label>
+          <label>Who offers it</label>
           <div className="row wrap">
             {data.providers.map((p) => (
               <label key={p.id} className="chip" style={{ cursor: "pointer" }}>
@@ -161,7 +161,7 @@ function Editor({ value, onClose, onSaved }: { value: Omit<Service, "id"> & { id
           </div>
         </div>
         <ErrorText error={error} />
-        <button className="btn block">שמירה</button>
+        <button className="btn block">Save</button>
       </form>
     </Modal>
   );

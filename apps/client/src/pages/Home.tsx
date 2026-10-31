@@ -13,12 +13,12 @@ export default function Home() {
   return (
     <div className="stack loose">
       <section className="home-head">
-        <h1>קביעת תור</h1>
-        <p className="ink-2">בוחרים עסק, שירות ושעה. אפשר גם לכתוב לעוזר של העסק במילים שלכם, או להקליט. האישור מגיע בוואטסאפ.</p>
+        <h1>Book your next appointment</h1>
+        <p className="ink-2">Pick a business, a service and a time. Or just write to the business's assistant in your own words, or say it out loud. The confirmation arrives on WhatsApp.</p>
       </section>
       <section aria-labelledby="biz-h">
         <h2 id="biz-h" className="list-title">
-          עסקים
+          Businesses
         </h2>
         <ErrorBox error={error} />
         {!list && !error && (
@@ -27,26 +27,29 @@ export default function Home() {
             <div className="skeleton" style={{ height: 58 }} />
           </div>
         )}
-        {list?.length === 0 && <p className="muted">עוד אין עסקים פתוחים להזמנה.</p>}
+        {list?.length === 0 && <p className="muted">No businesses are taking bookings yet.</p>}
         <ul className="biz-list">
           {list?.map((b) => (
             <li key={b.id}>
               <Link to={`/b/${b.slug}`}>
+                <span className="biz-mono" style={{ background: `linear-gradient(140deg, color-mix(in srgb, ${b.accent_color} 55%, white), ${b.accent_color})` }} aria-hidden>
+                  {b.name[0]}
+                </span>
                 <span className="grow">
                   <b>{b.name}</b>
                   <span className="small muted">
                     {b.category}
-                    {b.address && ` · ${b.address}`}
+                    {b.address && `, ${b.address}`}
                   </span>
                 </span>
-                <span className="go small">לקבוע</span>
+                <span className="go small">Book</span>
               </Link>
             </li>
           ))}
         </ul>
       </section>
       <p className="small muted">
-        יש לכם עסק? <Link to="/business">ככה נראה יום עבודה עם TORIM</Link>
+        Run a business? <Link to="/business">See a working day with TORIM</Link>
       </p>
     </div>
   );

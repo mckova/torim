@@ -4,35 +4,36 @@ export class ApiError extends Error {
   }
 }
 
+/** Friendlier wording for the API's error codes. */
 const MESSAGES: Record<string, string> = {
-  "this link name is taken": "הקישור הזה כבר תפוס, נסו אחר.",
-  "email already registered": "האימייל הזה כבר רשום. אפשר להתחבר במקום.",
-  "invalid email": "כתובת האימייל לא תקינה.",
-  "too many requests, try again in a minute": "יותר מדי בקשות, נסו שוב בעוד דקה.",
-  "link name must be 3-40 latin letters, digits or dashes": "קישור: אותיות באנגלית, ספרות ומקפים, 3 עד 40 תווים.",
-  "the owner account cannot be deactivated": "אי אפשר להשבית את חשבון הבעלים.",
-  "a password of at least 8 characters is required": "צריך סיסמה של לפחות 8 תווים.",
-  "owner only": "רק בעל העסק יכול לעשות את זה.",
-  "booking is not upcoming": "התור הזה כבר לא עתידי.",
-  "color must be #rrggbb": "צבע לא תקין.",
-  "AI is busy, try again in a moment": "ה-AI עמוס כרגע, נסו שוב בעוד רגע.",
-  "slot is no longer available": "השעה הזו נתפסה הרגע. בחרו שעה אחרת.",
-  "booking is not active": "התור כבר אינו פעיל.",
-  "wrong or expired code": "הקוד שגוי או שפג תוקפו.",
-  "wrong email or password": "אימייל או סיסמה שגויים.",
-  "nobody is waiting": "אין אף אחד בתור כרגע.",
-  "hold expired": "הזמן לשמירת השעה עבר. בחרו שעה שוב.",
+  "this link name is taken": "That link is taken. Try another one.",
+  "email already registered": "This email is already registered. You can sign in instead.",
+  "invalid email": "That email address doesn't look right.",
+  "too many requests, try again in a minute": "Too many requests. Try again in a minute.",
+  "link name must be 3-40 latin letters, digits or dashes": "Links use 3 to 40 latin letters, digits or dashes.",
+  "the owner account cannot be deactivated": "The owner account can't be deactivated.",
+  "a password of at least 8 characters is required": "Use a password of at least 8 characters.",
+  "owner only": "Only the owner can do this.",
+  "booking is not upcoming": "This booking is already in the past.",
+  "color must be #rrggbb": "That colour isn't valid.",
+  "AI is busy, try again in a moment": "The assistant is busy. Try again in a moment.",
+  "slot is no longer available": "Someone just took that time. Pick another one.",
+  "booking is not active": "This booking is no longer active.",
+  "wrong or expired code": "That code is wrong or has expired.",
+  "wrong email or password": "Wrong email or password.",
+  "nobody is waiting": "Nobody is waiting right now.",
+  "hold expired": "The hold on that time ran out. Pick a time again.",
 };
 
 export function translateError(e: unknown): string {
   if (e instanceof ApiError) {
     if (e.message.startsWith("changes are possible up to")) {
       const h = e.message.match(/\d+/)?.[0];
-      return `אפשר לשנות או לבטל עד ${h} שעות לפני התור. צרו קשר עם בית העסק.`;
+      return `Changes are possible up to ${h} hours before the appointment. Please contact the business.`;
     }
     return MESSAGES[e.message] ?? e.message;
   }
-  return "משהו השתבש. נסו שוב.";
+  return "Something went wrong. Try again.";
 }
 
 export function createApi(getToken: () => string | null = () => null) {

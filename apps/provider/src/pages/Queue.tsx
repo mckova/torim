@@ -3,7 +3,7 @@ import { Ticket, translateError } from "@torim/shared";
 import { api } from "../api";
 import { useToast } from "../components";
 
-const LABEL: Record<Ticket["status"], string> = { waiting: "ממתין", called: "נקרא", serving: "בטיפול", done: "הסתיים", left: "עזב" };
+const LABEL: Record<Ticket["status"], string> = { waiting: "Waiting", called: "Called", serving: "In the chair", done: "Done", left: "Left" };
 
 export default function Queue() {
   const [data, setData] = useState<{ tickets: Ticket[]; avg_minutes: number | null } | null>(null);
@@ -31,23 +31,23 @@ export default function Queue() {
   const finished = data.tickets.filter((t) => t.status === "done" || t.status === "left");
 
   return (
-    <div className="stack">
+    <div className="stack loose">
       <div className="page-head">
         <div>
-          <h1>תור חי</h1>
+          <h1>Walk-ins</h1>
           <span className="small muted">
-            לקוחות שהגיעו בלי תור לוקחים מספר מהטלפון.{" "}
-            {data.avg_minutes ? `זמן טיפול ממוצע היום: ${Math.round(data.avg_minutes)} דק׳.` : ""}
+            Walk-in clients take a number from their phone.{" "}
+            {data.avg_minutes ? `Average time in the chair today: ${Math.round(data.avg_minutes)} min.` : ""}
           </span>
         </div>
-        <button className="btn" disabled={!waiting.length} onClick={() => act(api.post("/api/pro/queue/call-next"), "הלקוח הבא נקרא ונשלחה לו הודעה")}>
-          לקרוא לבא בתור
+        <button className="btn cta" disabled={!waiting.length} onClick={() => act(api.post("/api/pro/queue/call-next"), "Called the next client and sent them a message")}>
+          Call the next client
         </button>
       </div>
 
-      <h2>בטיפול עכשיו</h2>
+      <h2>In the chair now</h2>
       {active.length === 0 ? (
-        <div className="card empty small">אף אחד לא בטיפול</div>
+        <div className="card empty small">Nobody is in the chair</div>
       ) : (
         <div className="queue-board">
           {active.map((t) => (
@@ -58,16 +58,16 @@ export default function Queue() {
               <span className="chip accent">{LABEL[t.status]}</span>
               {t.status === "called" ? (
                 <div className="row">
-                  <button className="btn sm grow" onClick={() => act(api.post(`/api/pro/queue/${t.id}/status`, { status: "serving" }), "התחלת טיפול")}>
-                    התחלה
+                  <button className="btn sm grow" onClick={() => act(api.post(`/api/pro/queue/${t.id}/status`, { status: "serving" }), "Started")}>
+                    Start
                   </button>
-                  <button className="btn ghost sm" onClick={() => act(api.post(`/api/pro/queue/${t.id}/status`, { status: "left" }), "סומן כעזב")}>
-                    לא הגיע
+                  <button className="btn ghost sm" onClick={() => act(api.post(`/api/pro/queue/${t.id}/status`, { status: "left" }), "Marked as left")}>
+                    Didn't come
                   </button>
                 </div>
               ) : (
-                <button className="btn sm" onClick={() => act(api.post(`/api/pro/queue/${t.id}/status`, { status: "done" }), "הטיפול הסתיים")}>
-                  סיום
+                <button className="btn sm" onClick={() => act(api.post(`/api/pro/queue/${t.id}/status`, { status: "done" }), "Done")}>
+                  Finish
                 </button>
               )}
             </div>
@@ -75,9 +75,9 @@ export default function Queue() {
         </div>
       )}
 
-      <h2>ממתינים ({waiting.length})</h2>
+      <h2>Waiting ({waiting.length})</h2>
       {waiting.length === 0 ? (
-        <div className="card empty small">התור ריק</div>
+        <div className="card empty small">Nobody is waiting</div>
       ) : (
         <div className="queue-board">
           {waiting.map((t) => (
@@ -85,7 +85,7 @@ export default function Queue() {
               <div className="num">{t.number}</div>
               <b>{t.name}</b>
               <span className="small muted">{t.service.name}</span>
-              <span className="tiny muted">{t.position === 1 ? "הבא בתור" : `מקום ${t.position}, בעוד כ-${t.eta_minutes ?? 0} דק׳`}</span>
+              <span className="tiny muted">{t.position === 1 ? "Next up" : `Number ${t.position} in line, about ${t.eta_minutes ?? 0} min`}</span>
             </div>
           ))}
         </div>
@@ -93,7 +93,7 @@ export default function Queue() {
 
       {finished.length > 0 && (
         <>
-          <h2 className="muted">הסתיימו היום</h2>
+          <h2 className="muted">Finished today</h2>
           <div className="row wrap">
             {finished.map((t) => (
               <span key={t.id} className="chip">

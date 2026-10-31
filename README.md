@@ -1,23 +1,22 @@
-# TORIM: appointment book with an assistant that writes in it
+# TORIM: booking calendar with an assistant that books for you
 
 TORIM is a full-stack booking system for small service businesses (barbers,
-clinics, studios), in Hebrew, built around one idea: an assistant that answers
-customers and keeps the book, while the owner can always see what it did.
-Anything the assistant wrote, a booking, a note, a drafted message, is shown in
-blue. Everything else is written by people.
+clinics, studios), built around one idea: an assistant that answers
+customers and keeps the calendar, while the owner can always see what it did.
+Anything the assistant did, a booking, a note, a drafted message, carries an
+"AI booked" mark in the sunset gradient. Everything else was done by people.
 
 Two apps share one API:
 
 - **Client app** (mobile-first PWA): pick a service, a staff member or "first
   available", a day and a time, and book in under a minute. Or write to the
-  business's assistant in plain Hebrew, by keyboard or by voice. Manage,
+  business's assistant in plain language, by keyboard or by voice. Manage,
   reschedule or cancel from a link, join a waitlist, take a live number for walk-ins.
-- **Provider app** (desktop + mobile PWA): today's page with the assistant's
-  margin notes, a week calendar with a lane per staff member, approvals, walk-in
+- **Provider app** (desktop + mobile PWA): a day calendar with a column per
+  staff member and the assistant beside it, a week calendar, approvals, walk-in
   queue, customers, hours, services, staff, insights and the message log.
 
-Right-to-left, Israeli week (Sunday first), `Asia/Jerusalem` with correct
-daylight-saving handling. Phone numbers instead of email, WhatsApp instead of
+English interface, `Asia/Jerusalem` with correct daylight-saving handling. Phone numbers instead of email, WhatsApp instead of
 inboxes, walk-ins next to appointments.
 
 ![Public page: a sample day, driven by scroll](docs/screenshots/landing-2-whatsapp.png)
@@ -31,7 +30,7 @@ action goes through the same booking engine as the UI.
 | | |
 |---|---|
 | **Sets up the business** | The owner describes the business in a sentence or two. The assistant writes the services, durations, prices, weekly hours and a public description, which carry straight into signup for review. Falls back to category templates without a key. |
-| **Answers customers** | Books, moves and cancels in a natural Hebrew conversation on the web chat or WhatsApp/Telegram (inbound webhook), scoped to the verified phone number. |
+| **Answers customers** | Books, moves and cancels in a natural conversation, in the customer's language on the web chat or WhatsApp/Telegram (inbound webhook), scoped to the verified phone number. |
 | **Leaves notes on today's page** | Reads the day (risks, pending approvals, waitlist, free time, walk-ins) and writes a short briefing, each note with one action: draft a reminder, approve, offer free time to the waitlist, open the booking. Rule-based notes without a key. |
 | **Drafts personal reminders** | For a customer likely to miss, it writes a warm WhatsApp message that fits their history. The owner edits and sends; nothing personal goes out unseen. |
 | **Works for the owner** | "Who is likely to no-show this week?", "Block tomorrow 14:00-16:00 and offer the gap to the waitlist": answers from live data and acts in the calendar within owner/staff permissions. |
@@ -42,8 +41,8 @@ rule-based notes and setup templates all work without it.
 
 | Provider app | |
 |---|---|
-| ![today](docs/screenshots/pro-today-notes.png) | ![calendar](docs/screenshots/pro-calendar.png) |
-| ![setup](docs/screenshots/pro-signup-proposal.png) | ![insights](docs/screenshots/pro-insights.png) |
+| ![today](docs/screenshots/pro-today.png) | ![calendar](docs/screenshots/pro-calendar.png) |
+| ![queue](docs/screenshots/pro-queue.png) | ![insights](docs/screenshots/pro-insights.png) |
 
 | Client app | | Public page, mobile |
 |---|---|---|
@@ -82,7 +81,7 @@ are in [docs/DESIGN.md](docs/DESIGN.md).
 ```
 apps/client     React + TypeScript + Vite  (served at /)
 apps/provider   React + TypeScript + Vite  (served at /pro)
-apps/shared     API client, types, Hebrew formatting, design system CSS
+apps/shared     API client, types, formatting, design system CSS
 backend/torim
   availability.py   pure slot engine (interval algebra, timezone aware)
   booking.py        holds, lifecycle, waitlist, walk-in queue, concurrency guard

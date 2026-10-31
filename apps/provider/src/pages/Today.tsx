@@ -1,212 +1,137 @@
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Booking, Icon, STATUS_LABEL, addDays, isoDate, money, time } from "@torim/shared";
 import { api, useMe } from "../api";
-import { BookingActions, BookingModal, NewBookingModal, useToast } from "../components";
-import { MarginNotes, ReminderModal } from "../ai";
-
-const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+import { BookingModal, NewBookingModal, useToast } from "../components";
+import { AssistantCard, ReminderModal } from "../ai";
+import { DayBoard, RiskMap, minutesOf } from "../DayBoard";
 
 function greeting(name: string) {
-  const h = new Date().getHours();
+  const h = +new Date().toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Jerusalem" });
   const first = name.split(" ")[0];
-  if (h < 12) return `בוקר טוב, ${first}`;
-  if (h < 17) return `צהריים טובים, ${first}`;
-  return `ערב טוב, ${first}`;
+  if (h < 12) return `Good morning, ${first}.`;
+  if (h < 17) return `Good afternoon, ${first}.`;
+  return `Good evening, ${first}.`;
 }
 
+const dateChip = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+
+/** The day at a glance: who is in which chair, what the assistant wants from you, who is in the chair right now. */
 export default function Today() {
   const { data } = useMe();
   const [day, setDay] = useState(isoDate());
   const [rows, setRows] = useState<Booking[] | null>(null);
-  const [pending, setPending] = useState<Booking[]>([]);
-  const [providerId, setProviderId] = useState<number | "">("");
+  const [risk, setRisk] = useState<RiskMap>({});
+  const [waiting, setWaiting] = useState(0);
   const [open, setOpen] = useState<Booking | null>(null);
   const [creating, setCreating] = useState(false);
   const [remind, setRemind] = useState<Booking | null>(null);
   const [toast, show] = useToast();
-  const [risk, setRisk] = useState<Record<number, { level: string; probability: number; reasons: string[] }>>({});
 
   function load() {
-    api.get<Booking[]>("/api/pro/bookings", { start: day, end: day, provider_id: providerId }).then(setRows);
-    api.get<Booking[]>("/api/pro/bookings", { start: isoDate(), end: addDays(isoDate(), 60), status: "pending" }).then(setPending);
+    api.get<Booking[]>("/api/pro/bookings", { start: day, end: day }).then(setRows);
     api
       .get<{ bookings: { booking_id: number; level: string; probability: number; reasons: string[] }[] }>("/api/pro/risk", { start: day, days: 1 })
-      .then((r) => setRisk(Object.fromEntries(r.bookings.map((x) => [x.booking_id, x]))));
+      .then((r) => setRisk(Object.fromEntries(r.bookings.map((x) => [x.booking_id, x]))))
+      .catch(() => setRisk({}));
+    api
+      .get<{ date: string; status: string }[]>("/api/pro/waitlist")
+      .then((w) => setWaiting(w.filter((e) => e.date === day && e.status === "waiting").length))
+      .catch(() => setWaiting(0));
   }
-  useEffect(load, [day, providerId]);
+  useEffect(load, [day]);
 
   function changed(b: Booking) {
     setRows((r) => r?.map((x) => (x.id === b.id ? b : x)) ?? null);
-    setPending((p) => p.filter((x) => x.id !== b.id || b.status === "pending"));
     setOpen((o) => (o && o.id === b.id ? b : o));
-    show(`עודכן: ${STATUS_LABEL[b.status]}`);
+    show(`Updated: ${STATUS_LABEL[b.status]}`);
   }
 
   async function bookingById(id: number) {
-    const found = rows?.find((b) => b.id === id) ?? pending.find((b) => b.id === id);
+    const found = rows?.find((b) => b.id === id);
     if (found) return found;
-    const list = await api.get<Booking[]>("/api/pro/bookings", { start: isoDate(), end: addDays(isoDate(), 2) });
+    const list = await api.get<Booking[]>("/api/pro/bookings", { start: isoDate(), end: addDays(isoDate(), 60) });
     return list.find((b) => b.id === id) ?? null;
   }
 
-  const active = rows?.filter((b) => b.status !== "cancelled") ?? [];
-  const expected = active.reduce((s, b) => s + b.price, 0);
-  const done = active.filter((b) => b.status === "completed").length;
-  const now = new Date().toISOString();
+  async function offer() {
+    try {
+      const r = await api.post<{ sent: number }>("/api/pro/waitlist/offer-today");
+      show(r.sent ? `Sent to ${r.sent} on the waitlist. First to book gets it.` : "Nobody on the waitlist fits the free time.");
+      load();
+    } catch {
+      show("Couldn't reach the waitlist. Try again.");
+    }
+  }
+
   const isToday = day === isoDate();
-  const d = new Date(day + "T12:00:00");
-  let nowShown = false;
+  const live = rows?.filter((b) => b.status !== "cancelled" && b.status !== "no_show") ?? [];
+  const expected = live.reduce((s, b) => s + b.price, 0);
+  const staff = data.me.role === "owner" ? data.providers.filter((p) => p.active) : data.providers.filter((p) => p.id === data.me.id);
+  const nowMin = minutesOf(new Date().toISOString());
+  const inChair = isToday ? live.filter((b) => minutesOf(b.start) <= nowMin && nowMin < minutesOf(b.end)) : [];
+  const next = isToday ? live.filter((b) => minutesOf(b.start) > nowMin).sort((a, b) => a.start.localeCompare(b.start))[0] : undefined;
 
   return (
-    <div>
-      <header className="today-head">
-        <div className="today-date" aria-hidden>
-          {String(d.getDate()).padStart(2, "0")}.{String(d.getMonth() + 1).padStart(2, "0")}
-        </div>
-        <div className="today-title">
-          <h1>{isToday ? greeting(data.me.name) : `יום ${DAY_NAMES[d.getDay()]}`}</h1>
-          <p className="today-summary">
-            {isToday ? `יום ${DAY_NAMES[d.getDay()]}. ` : ""}
-            {active.length ? (
-              <>
-                <b>{active.length}</b> תורים, <b>{done}</b> הושלמו, <b>{money(expected)}</b> צפוי
-                {pending.length > 0 && (
-                  <>
-                    {" "}· <b>{pending.length}</b> מחכים לאישור
-                  </>
-                )}
-              </>
-            ) : (
-              "אין תורים ביום הזה"
-            )}
-          </p>
-        </div>
-        <div className="today-nav">
-          <button className="btn ghost sm icon-only" onClick={() => setDay(addDays(day, -1))} aria-label="היום הקודם">
-            <Icon name="arrow" className="flip-rtl" />
-          </button>
-          {!isToday && (
-            <button className="btn ghost sm" onClick={() => setDay(isoDate())}>
-              היום
+    <div className="today">
+      <header className="hero">
+        <h1>
+          {isToday ? greeting(data.me.name) : new Date(day + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+          <span className="hero-line">
+            {isToday ? "Today brings" : "The day has"} <span className="pill">{live.length} {live.length === 1 ? "client" : "clients"}</span> and <span className="pill">{money(expected)}</span>
+          </span>
+        </h1>
+        <div className="hero-ctrls">
+          <div className="seg" role="group" aria-label="View">
+            <span className="on" aria-current="page">
+              Day
+            </span>
+            <Link to="/calendar">Week</Link>
+          </div>
+          <div className="date-chip">
+            <button onClick={() => setDay(addDays(day, -1))} aria-label="Previous day">
+              <Icon name="arrow" />
             </button>
-          )}
-          <button className="btn ghost sm icon-only" onClick={() => setDay(addDays(day, 1))} aria-label="היום הבא">
-            <Icon name="arrow" />
-          </button>
-          <button className="btn sm" onClick={() => setCreating(true)}>
-            תור חדש
+            <button className="date-label" onClick={() => setDay(isoDate())} title="Back to today">
+              {isToday ? `Today, ${dateChip(day).split(", ")[1]}` : dateChip(day)}
+            </button>
+            <button onClick={() => setDay(addDays(day, 1))} aria-label="Next day">
+              <Icon name="arrow" className="flip" />
+            </button>
+          </div>
+          <button className="btn cta" onClick={() => setCreating(true)}>
+            <Icon name="plus" /> New booking
           </button>
         </div>
       </header>
 
       <div className="today-grid">
-        <div>
-          {pending.length > 0 && (
-            <section className="approvals" aria-labelledby="appr-h">
-              <h2 id="appr-h">מחכים לאישור שלך</h2>
-              {pending.slice(0, 5).map((b) => (
-                <div key={b.id} className="approval">
-                  <div className="stack tight">
-                    <b>
-                      {b.customer.name}, {b.service.name}
-                    </b>
-                    <span className="small muted">
-                      <span className="num">{time(b.start)}</span> · {new Date(b.start).toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "numeric" })} · {b.provider.name}
-                    </span>
-                  </div>
-                  <BookingActions b={b} onChange={changed} />
-                </div>
-              ))}
-            </section>
+        <section className="panel board-panel" aria-label="Day by staff">
+          {!rows ? (
+            <div className="skeleton" style={{ height: 520 }} />
+          ) : (
+            <DayBoard staff={staff} bookings={rows} risk={risk} isToday={isToday} waiting={waiting} onOpen={setOpen} onCreate={() => setCreating(true)} onOffer={offer} />
           )}
-
-          <section className="ledger" aria-labelledby="ledger-h">
-            <div className="ledger-tools">
-              <h2 id="ledger-h">סדר היום</h2>
-              {data.me.role === "owner" && data.providers.length > 1 && (
-                <select className="input" style={{ width: "auto" }} aria-label="סינון לפי איש צוות" value={providerId} onChange={(e) => setProviderId(e.target.value ? Number(e.target.value) : "")}>
-                  <option value="">כל הצוות</option>
-                  {data.providers.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+          {rows && live.length === 0 && (
+            <div className="board-empty">
+              <p>Nothing booked for this day yet.</p>
+              <button className="btn ghost sm" onClick={() => setCreating(true)}>
+                Add a booking
+              </button>
             </div>
-            {!rows ? (
-              <div className="stack tight" aria-hidden>
-                {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="skeleton" style={{ height: 56 }} />
-                ))}
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="ledger-empty">
-                <span>הדף של היום ריק.</span>
-                <button className="btn ghost sm" onClick={() => setCreating(true)}>
-                  רישום תור
-                </button>
-              </div>
-            ) : (
-              rows.map((b) => {
-                const showNow = isToday && !nowShown && b.start > now;
-                if (showNow) nowShown = true;
-                const r = risk[b.id];
-                return (
-                  <Fragment key={b.id}>
-                    {showNow && (
-                      <div className="ledger-now" aria-label={`עכשיו ${time(now)}`}>
-                        {time(now)}
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      className={`ledger-row ${b.end < now ? "past" : ""} ${b.source === "ai" ? "ai" : ""} ${b.status}`}
-                      onClick={() => setOpen(b)}
-                    >
-                      <span className="t">
-                        {time(b.start)}
-                        <small>{time(b.end)}</small>
-                      </span>
-                      <span className="who">
-                        <b>{b.customer.name}</b>
-                        <span>
-                          {b.service.name}
-                          {data.providers.length > 1 && (
-                            <>
-                              {" · "}
-                              <span className="staff">
-                                <span className="dot" style={{ background: b.provider.color }} />
-                                {b.provider.name}
-                              </span>
-                            </>
-                          )}
-                          {b.source === "ai" && <span className="by-ai"> · נקבע ע״י העוזר</span>}
-                        </span>
-                      </span>
-                      <span className="side">
-                        {b.status !== "confirmed" && <span className={`chip ${b.status}`}>{STATUS_LABEL[b.status]}</span>}
-                        {r && r.level !== "low" && (
-                          <span className={`risk ${r.level}`} title={r.reasons.join(", ")}>
-                            {Math.round(r.probability * 100)}% אי-הגעה
-                          </span>
-                        )}
-                      </span>
-                    </button>
-                  </Fragment>
-                );
-              })
-            )}
-          </section>
-        </div>
+          )}
+        </section>
 
-        {isToday && (
-          <MarginNotes
-            onChanged={load}
-            onOpenBooking={(id) => bookingById(id).then((b) => b && setOpen(b))}
-            onRemind={(id) => bookingById(id).then((b) => b && setRemind(b))}
-          />
-        )}
+        <aside className="side">
+          {isToday && (
+            <AssistantCard
+              onChanged={load}
+              onOpenBooking={(id) => bookingById(id).then((b) => b && setOpen(b))}
+              onRemind={(id) => bookingById(id).then((b) => b && setRemind(b))}
+            />
+          )}
+          {isToday && (inChair.length > 0 || next) && <ChairCard now={inChair} next={next} nowMin={nowMin} />}
+        </aside>
       </div>
 
       {open && (
@@ -226,7 +151,7 @@ export default function Today() {
           onClose={() => setRemind(null)}
           onSent={() => {
             setRemind(null);
-            show("התזכורת נשלחה בוואטסאפ");
+            show("Reminder sent on WhatsApp");
           }}
         />
       )}
@@ -237,11 +162,48 @@ export default function Today() {
           onCreated={() => {
             setCreating(false);
             load();
-            show("התור נרשם ונשלח אישור ללקוח");
+            show("Booked. The client got a confirmation.");
           }}
         />
       )}
       {toast}
     </div>
+  );
+}
+
+function ChairCard({ now, next, nowMin }: { now: Booking[]; next?: Booking; nowMin: number }) {
+  const b = now[0];
+  if (!b && next) {
+    const mins = minutesOf(next.start) - nowMin;
+    return (
+      <section className="panel night chair" aria-label="Next up">
+        <span className="chair-label">Next up</span>
+        <b className="chair-name">{next.customer.name}</b>
+        <div className="chair-row">
+          <span>
+            {next.service.name} with {next.provider.name.split(" ")[0]}
+          </span>
+          <span>{mins < 60 ? `in ${mins} min` : time(next.start)}</span>
+        </div>
+      </section>
+    );
+  }
+  const s = minutesOf(b.start);
+  const e = minutesOf(b.end);
+  const pct = Math.min(100, Math.max(0, ((nowMin - s) / (e - s)) * 100));
+  return (
+    <section className="panel night chair" aria-label="In the chair now">
+      <span className="chair-label">In the chair now{now.length > 1 ? ` · ${now.length} chairs busy` : ""}</span>
+      <b className="chair-name">{b.customer.name}</b>
+      <div className="chair-bar" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Time used">
+        <i style={{ width: `${pct}%` }} />
+      </div>
+      <div className="chair-row">
+        <span>
+          {b.service.name} with {b.provider.name.split(" ")[0]}
+        </span>
+        <span>{e - nowMin} min left</span>
+      </div>
+    </section>
   );
 }

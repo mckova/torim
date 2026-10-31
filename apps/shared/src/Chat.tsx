@@ -43,7 +43,7 @@ export function ChatPanel({
       const r = await send(text);
       setItems((x) => [...x, { role: "assistant", text: r.reply, extra: r.extra }]);
     } catch (e) {
-      setItems((x) => [...x, { role: "assistant", text: "⚠️ " + translateError(e) }]);
+      setItems((x) => [...x, { role: "assistant", text: translateError(e) }]);
     } finally {
       setBusy(false);
     }
@@ -86,21 +86,21 @@ export function ChatPanel({
         <label className="sr-only" htmlFor="chat-draft">
           {placeholder}
         </label>
-        <input id="chat-draft" className="input" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={voice.listening ? "מקשיבה…" : placeholder} disabled={busy} autoComplete="off" />
+        <input id="chat-draft" className="input" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={voice.listening ? "Listening…" : placeholder} disabled={busy} autoComplete="off" />
         {voice.supported && (
           <button
             type="button"
             className={`btn ghost icon-only mic ${voice.listening ? "live" : ""}`}
             onClick={() => (voice.listening ? voice.stop() : voice.start())}
-            aria-label={voice.listening ? "עצירת הקלטה" : "דיבור במקום הקלדה"}
+            aria-label={voice.listening ? "Stop recording" : "Speak instead of typing"}
             aria-pressed={voice.listening}
             disabled={busy}
           >
             <Icon name="mic" />
           </button>
         )}
-        <button className="btn icon-only" disabled={busy || !draft.trim()} aria-label="שליחה">
-          <Icon name="send" className="flip-rtl" />
+        <button className="btn icon-only" disabled={busy || !draft.trim()} aria-label="Send">
+          <Icon name="send" />
         </button>
       </form>
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ApiError, Booking, Business, Provider, Service, Slot, dayLong, duration, money, time } from "@torim/shared";
+import { ApiError, Booking, Business, Icon, Provider, Service, Slot, dayLong, duration, money, time } from "@torim/shared";
 import { api, getSession, rememberBooking } from "../api";
 import { ErrorBox, SlotPicker, Spinner, Steps, icsHref, initials, useAccent } from "../components";
 import Assistant from "./Assistant";
@@ -39,19 +39,19 @@ export default function BusinessPage() {
         <h1>{b.name}</h1>
         <span className="small muted">
           {b.category}
-          {b.address && ` · ${b.address}`}
+          {b.address && `, ${b.address}`}
         </span>
         {b.description && <p className="ink-2">{b.description}</p>}
       </section>
       <div className="tabs">
         <button className={tab === "book" ? "on" : ""} onClick={() => setTab("book")}>
-          קביעת תור
+          Book
         </button>
         <button className={tab === "chat" ? "on" : ""} onClick={() => setTab("chat")}>
-          לכתוב לעוזר
+          Ask the assistant
         </button>
         <button className={tab === "queue" ? "on" : ""} onClick={() => setTab("queue")}>
-          תור חי
+          Walk-in
         </button>
       </div>
       {tab === "book" && <Wizard page={page} initialService={Number(params.get("service")) || null} initialDate={params.get("date")} />}
@@ -115,22 +115,22 @@ function Wizard({ page, initialService, initialDate }: { page: Page; initialServ
       <Steps step={step} total={5} />
       {step > 0 && step < 4 && (
         <button className="btn ghost sm" style={{ alignSelf: "flex-start" }} onClick={back}>
-          חזרה
+          Back
         </button>
       )}
       <ErrorBox error={error} />
 
       {step === 0 && (
         <div className="stack">
-          <h2>איזה שירות?</h2>
+          <h2>Which service?</h2>
           {services.map((s) => (
             <button key={s.id} className="option" onClick={() => setService(s)}>
               <div className="grow stack tight">
                 <b>{s.name}</b>
                 <span className="small muted">
                   {duration(s.duration)}
-                  {s.capacity > 1 && ` · קבוצה עד ${s.capacity}`}
-                  {s.requires_confirmation && " · דורש אישור"}
+                  {s.capacity > 1 && `, group of up to ${s.capacity}`}
+                  {s.requires_confirmation && ", needs approval"}
                 </span>
                 {s.description && <span className="tiny muted">{s.description}</span>}
               </div>
@@ -142,19 +142,19 @@ function Wizard({ page, initialService, initialDate }: { page: Page; initialServ
 
       {step === 1 && service && (
         <div className="stack">
-          <h2>אצל מי?</h2>
+          <h2>With whom?</h2>
           <button className="option" onClick={() => setProvider(null)}>
-            <div className="avatar" style={{ background: "var(--accent)" }}>
-              ★
+            <div className="avatar" style={{ background: "var(--sunset)" }} aria-hidden>
+              <Icon name="clock" />
             </div>
             <div className="grow stack tight">
-              <b>הכי מוקדם שפנוי</b>
-              <span className="small muted">נשבץ אותך אצל מי שפנוי בשעה שתבחרו</span>
+              <b>First available</b>
+              <span className="small muted">We'll book you with whoever is free at the time you pick</span>
             </div>
           </button>
           {offered.map((p) => (
             <button key={p.id} className="option" onClick={() => setProvider(p.id)}>
-              <div className="avatar" style={{ background: p.color }}>
+              <div className="avatar" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${p.color} 45%, white), ${p.color})` }} aria-hidden>
                 {initials(p.name)}
               </div>
               <div className="grow stack tight">
@@ -168,10 +168,10 @@ function Wizard({ page, initialService, initialDate }: { page: Page; initialServ
 
       {step === 2 && service && (
         <div className="stack">
-          <h2>מתי נוח לך?</h2>
+          <h2>When suits you?</h2>
           <p className="small muted">
-            {service.name} · {duration(service.duration)}
-            {provider ? ` · ${providers.find((p) => p.id === provider)?.name}` : ""}
+            {service.name}, {duration(service.duration)}
+            {provider ? `, with ${providers.find((p) => p.id === provider)?.name}` : ""}
           </p>
           <SlotPicker
             slug={business.slug}
@@ -273,47 +273,47 @@ function Details({
 
   return (
     <form className="stack" onSubmit={submit}>
-      <h2>כמעט סיימנו</h2>
+      <h2>Almost done</h2>
       <div className="card flat">
         <div className="summary-line">
-          <span className="muted">שירות</span>
+          <span className="muted">Service</span>
           <b>{service.name}</b>
         </div>
         <div className="summary-line">
-          <span className="muted">מתי</span>
+          <span className="muted">When</span>
           <b>
-            {dayLong(slot.start)} · {time(slot.start)}
+            {dayLong(slot.start)}, {time(slot.start)}
           </b>
         </div>
         <div className="summary-line">
-          <span className="muted">אצל</span>
+          <span className="muted">With</span>
           <b>{providerName}</b>
         </div>
         <div className="summary-line">
-          <span className="muted">מחיר</span>
+          <span className="muted">Price</span>
           <b>{money(service.price)}</b>
         </div>
       </div>
       <div className="alert info small">
-        השעה שמורה לך עוד <b className="countdown">{mm}:{ss}</b> דקות
+        We're holding this time for you for <b className="countdown">{mm}:{ss}</b>
       </div>
       <div className="field">
-        <label htmlFor="name">שם מלא</label>
+        <label htmlFor="name">Full name</label>
         <input id="name" className="input" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
       </div>
       <div className="field">
-        <label htmlFor="phone">טלפון נייד (לאישור ותזכורות בוואטסאפ)</label>
-        <input id="phone" className="input" required inputMode="tel" dir="ltr" placeholder="050-0000000" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+        <label htmlFor="phone">Mobile (for the WhatsApp confirmation and reminders)</label>
+        <input id="phone" className="input" required inputMode="tel" placeholder="050-0000000" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
       </div>
       <div className="field">
-        <label htmlFor="notes">הערות (לא חובה)</label>
+        <label htmlFor="notes">Notes (optional)</label>
         <textarea id="notes" className="input" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
       </div>
       <ErrorBox error={error} />
-      <button className="btn block" disabled={busy}>
-        {busy ? "קובעים..." : service.requires_confirmation ? "שליחת בקשה לתור" : "אישור וקביעת תור"}
+      <button className="btn cta block" disabled={busy}>
+        {busy ? "Booking…" : service.requires_confirmation ? "Send the request" : "Confirm booking"}
       </button>
-      <p className="tiny muted center">ביטול או שינוי אפשריים עד {business.cancel_window_hours} שעות לפני התור.</p>
+      <p className="tiny muted center">You can change or cancel up to {business.cancel_window_hours} hours before.</p>
     </form>
   );
 }
@@ -324,37 +324,37 @@ function Done({ booking, business }: { booking: Booking; business: Business }) {
   return (
     <div className="stack center">
       <div className={`done-mark ${pending ? "pending" : ""}`} aria-hidden>
-        {pending ? "ממתין לאישור" : "נרשם ביומן"}
+        {pending ? "Waiting for approval" : "You're booked"}
       </div>
-      <h1>{pending ? "הבקשה נשלחה לעסק" : "התור נקבע"}</h1>
+      <h1>{pending ? "Request sent to the business" : "See you there"}</h1>
       <p className="muted">
-        {pending ? "נעדכן אותך בוואטסאפ ברגע שהתור יאושר." : "שלחנו אישור לוואטסאפ, ונזכיר לך יום לפני ושעתיים לפני."}
+        {pending ? "We'll message you on WhatsApp as soon as it's approved." : "We sent a confirmation to WhatsApp, and we'll remind you a day before and two hours before."}
       </p>
       <div className="card flat" style={{ textAlign: "start" }}>
         <div className="summary-line">
-          <span className="muted">שירות</span>
+          <span className="muted">Service</span>
           <b>{booking.service.name}</b>
         </div>
         <div className="summary-line">
-          <span className="muted">מתי</span>
+          <span className="muted">When</span>
           <b>
-            {dayLong(booking.start)} · {time(booking.start)}
+            {dayLong(booking.start)}, {time(booking.start)}
           </b>
         </div>
         <div className="summary-line">
-          <span className="muted">אצל</span>
+          <span className="muted">With</span>
           <b>{booking.provider.name}</b>
         </div>
         <div className="summary-line">
-          <span className="muted">איפה</span>
+          <span className="muted">Where</span>
           <b>{business.address}</b>
         </div>
       </div>
-      <a className="btn soft block" href={icsHref(`${booking.service.name} - ${business.name}`, booking.start, booking.end, business.address)} download="torim.ics">
-        הוספה ליומן
+      <a className="btn soft block" href={icsHref(`${booking.service.name}, ${business.name}`, booking.start, booking.end, business.address)} download="torim.ics">
+        Add to calendar
       </a>
       <Link className="btn ghost block" to={manage}>
-        ניהול התור (שינוי או ביטול)
+        Manage booking (change or cancel)
       </Link>
     </div>
   );
@@ -393,14 +393,16 @@ function Waitlist({
   if (result)
     return (
       <div className="stack center">
-        <div style={{ fontSize: "3rem" }}>🔔</div>
-        <h2>נרשמת לרשימת ההמתנה</h2>
+        <div className="done-mark" aria-hidden>
+          On the waitlist
+        </div>
+        <h2>We'll let you know</h2>
         <p className="muted">
-          אם יתפנה מקום ל{service.name} ב{dayLong(date + "T12:00:00")}, נשלח לך הודעה מיד.
-          {result.ahead_of_you > 0 && ` לפניך ברשימה: ${result.ahead_of_you}.`}
+          If a spot opens up for {service.name} on {dayLong(date + "T12:00:00")}, we'll message you right away.
+          {result.ahead_of_you > 0 && ` Ahead of you: ${result.ahead_of_you}.`}
         </p>
         <button className="btn ghost" onClick={onBack}>
-          חזרה לבחירת שעה
+          Back to times
         </button>
       </div>
     );
@@ -408,16 +410,16 @@ function Waitlist({
   return (
     <form className="stack" onSubmit={submit}>
       <button type="button" className="btn ghost sm" style={{ alignSelf: "flex-start" }} onClick={onBack}>
-        חזרה
+        Back
       </button>
-      <h2>רשימת המתנה</h2>
+      <h2>Waitlist</h2>
       <p className="muted small">
-        {service.name} · {dayLong(date + "T12:00:00")}. מי שנרשם ראשון מקבל הודעה ראשון כשמתפנה מקום.
+        {service.name}, {dayLong(date + "T12:00:00")}. First to join is the first to hear when a spot opens up.
       </p>
-      <input className="input" placeholder="שם מלא" required value={name} onChange={(e) => setName(e.target.value)} />
-      <input className="input" placeholder="טלפון נייד" dir="ltr" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <input className="input" placeholder="Full name" aria-label="Full name" required value={name} onChange={(e) => setName(e.target.value)} />
+      <input className="input" placeholder="Mobile" aria-label="Mobile" required value={phone} onChange={(e) => setPhone(e.target.value)} />
       <ErrorBox error={error} />
-      <button className="btn block">הרשמה להמתנה</button>
+      <button className="btn block">Join the waitlist</button>
     </form>
   );
 }
@@ -451,18 +453,18 @@ function WalkIn({ page }: { page: Page }) {
     <div className="stack">
       <div className="grid two">
         <div className="card center stack tight">
-          <span className="small muted">עכשיו בטיפול</span>
-          <b style={{ fontSize: "2rem" }}>{board?.now_serving.map((t) => t.number).join(", ") || "אין"}</b>
+          <span className="small muted">Now serving</span>
+          <b style={{ fontSize: "2rem" }}>{board?.now_serving.map((t) => t.number).join(", ") || "Nobody"}</b>
         </div>
         <div className="card center stack tight">
-          <span className="small muted">ממתינים</span>
+          <span className="small muted">Waiting</span>
           <b style={{ fontSize: "2rem" }}>{board?.waiting_count ?? "0"}</b>
         </div>
       </div>
       <form className="card stack" onSubmit={take}>
-        <h2>לקחת מספר</h2>
-        <p className="small muted">מגיעים בלי תור? קחו מספר מהטלפון ונשלח הודעה כשמגיע תורכם.</p>
-        <select className="input" value={serviceId} onChange={(e) => setServiceId(Number(e.target.value))}>
+        <h2>Take a number</h2>
+        <p className="small muted">No appointment? Take a number on your phone and we'll message you when you're up.</p>
+        <select className="input" aria-label="Service" value={serviceId} onChange={(e) => setServiceId(Number(e.target.value))}>
           {page.services
             .filter((s) => s.capacity === 1)
             .map((s) => (
@@ -471,10 +473,10 @@ function WalkIn({ page }: { page: Page }) {
               </option>
             ))}
         </select>
-        <input className="input" placeholder="שם" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} />
-        <input className="input" placeholder="טלפון (להתראה)" dir="ltr" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <input className="input" placeholder="Name" aria-label="Name" required minLength={2} value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="input" placeholder="Phone, for the alert" aria-label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
         <ErrorBox error={error} />
-        <button className="btn block">קבלת מספר</button>
+        <button className="btn cta block">Get a number</button>
       </form>
     </div>
   );

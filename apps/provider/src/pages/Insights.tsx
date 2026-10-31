@@ -22,12 +22,12 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 function tips(s: Stats): string[] {
   const out: string[] = [];
-  if (s.no_show_rate > 0.05) out.push(`שיעור אי-הגעה ${pct(s.no_show_rate)}. כדאי להפעיל תזכורת נוספת שעה לפני, או לגבות מקדמה בשירותים הארוכים.`);
-  if (s.utilization < 0.6) out.push(`ניצולת היומן ${pct(s.utilization)}. יש מקום לקמפיין שעות שקטות או לצמצם משמרות.`);
-  if (s.utilization > 0.85) out.push(`היומן כמעט מלא (${pct(s.utilization)}). שווה לפתוח שעות נוספות או להוסיף איש צוות, רשימת ההמתנה תגדל.`);
+  if (s.no_show_rate > 0.05) out.push(`${pct(s.no_show_rate)} of clients didn't show up. Add a second reminder an hour before, or take a deposit for long services.`);
+  if (s.utilization < 0.6) out.push(`The calendar is ${pct(s.utilization)} full. There is room for a quiet-hours offer, or for shorter shifts.`);
+  if (s.utilization > 0.85) out.push(`The calendar is almost full (${pct(s.utilization)}). Open more hours or add someone to the team before the waitlist grows.`);
   const hours = Object.entries(s.per_hour).sort((a, b) => b[1] - a[1]);
-  if (hours.length > 2) out.push(`שעות השיא: ${hours.slice(0, 2).map(([h]) => `${h}:00`).join(", ")}. השעות החלשות: ${hours.slice(-2).map(([h]) => `${h}:00`).join(", ")}.`);
-  if (s.online_share > 0.6) out.push(`${pct(s.online_share)} מהתורים נקבעו אונליין, בלי שיחת טלפון.`);
+  if (hours.length > 2) out.push(`Busiest hours: ${hours.slice(0, 2).map(([h]) => `${h}:00`).join(", ")}. Quietest: ${hours.slice(-2).map(([h]) => `${h}:00`).join(", ")}.`);
+  if (s.online_share > 0.6) out.push(`${pct(s.online_share)} of bookings were made online, without a phone call.`);
   return out;
 }
 
@@ -48,28 +48,28 @@ export default function Insights() {
   const maxProv = Math.max(1, ...s.per_provider.map(([, v]) => v));
 
   return (
-    <div className="stack">
+    <div className="stack loose">
       <div className="page-head">
-        <h1>תובנות</h1>
-        <div className="tabs" style={{ width: 280 }}>
+        <h1>Insights</h1>
+        <div className="tabs">
           {[7, 30, 90].map((r) => (
             <button key={r} className={range === r ? "on" : ""} onClick={() => setRange(r)}>
-              {r} ימים
+              {r} days
             </button>
           ))}
         </div>
       </div>
       <dl className="kpi-line">
-        <Kpi v={money(s.revenue)} l="הכנסות (הושלמו)" />
-        <Kpi v={String(s.bookings)} l="תורים" />
-        <Kpi v={pct(s.utilization)} l="ניצולת יומן" />
-        <Kpi v={pct(s.no_show_rate)} l="לא הגיעו" warn={s.no_show_rate > 0.05} />
-        <Kpi v={pct(s.cancel_rate)} l="ביטולים" />
-        <Kpi v={s.avg_lead_days != null ? `${s.avg_lead_days} ימים` : "אין נתון"} l="זמן הזמנה מראש" />
+        <Kpi v={money(s.revenue)} l="Revenue, completed" />
+        <Kpi v={String(s.bookings)} l="Bookings" />
+        <Kpi v={pct(s.utilization)} l="Calendar filled" />
+        <Kpi v={pct(s.no_show_rate)} l="No-shows" warn={s.no_show_rate > 0.05} />
+        <Kpi v={pct(s.cancel_rate)} l="Cancellations" />
+        <Kpi v={s.avg_lead_days != null ? `${s.avg_lead_days} days` : "No data"} l="Booked ahead" />
       </dl>
       {tips(s).length > 0 && (
         <section className="card stack tight">
-          <h2>מה רואים בנתונים</h2>
+          <h2>What the numbers say</h2>
           <ul className="plain-list">
             {tips(s).map((t) => (
               <li key={t}>{t}</li>
@@ -78,10 +78,10 @@ export default function Insights() {
         </section>
       )}
       <div className="card stack">
-        <h2>תורים ליום</h2>
+        <h2>Bookings per day</h2>
         <div className="bar-chart">
           {days.map(([d, v]) => (
-            <div key={d} className="bar" style={{ height: `${(v / maxDay) * 100}%` }} title={`${dayShort(d).weekday} ${d.slice(8)}/${d.slice(5, 7)}: ${v}`} />
+            <div key={d} className="bar" style={{ height: `${(v / maxDay) * 100}%` }} title={`${dayShort(d).weekday} ${dayShort(d).month} ${dayShort(d).day}: ${v}`} />
           ))}
         </div>
         <div className="row between tiny muted">
@@ -91,10 +91,10 @@ export default function Insights() {
       </div>
       <div className="grid two">
         <div className="card stack">
-          <h2>לפי שעה ביום</h2>
+          <h2>By hour of day</h2>
           <div className="bar-chart" style={{ height: 100 }}>
             {hours.map(([h, v]) => (
-              <div key={h} className="bar" style={{ height: `${(v / maxHour) * 100}%` }} title={`${h}:00 · ${v}`} />
+              <div key={h} className="bar" style={{ height: `${(v / maxHour) * 100}%` }} title={`${h}:00, ${v}`} />
             ))}
           </div>
           <div className="row between tiny muted">
@@ -103,7 +103,7 @@ export default function Insights() {
           </div>
         </div>
         <div className="card stack tight">
-          <h2>שירותים מובילים</h2>
+          <h2>Top services</h2>
           {s.top_services.map(([n, v]) => (
             <div key={n} className="hbar">
               <span>{n}</span>
@@ -113,7 +113,7 @@ export default function Insights() {
               <b>{v}</b>
             </div>
           ))}
-          <h2 style={{ marginTop: "0.75rem" }}>לפי איש צוות</h2>
+          <h2 style={{ marginTop: "0.75rem" }}>By team member</h2>
           {s.per_provider.map(([n, v]) => (
             <div key={n} className="hbar">
               <span>{n}</span>

@@ -16,14 +16,14 @@ interface Brief {
 }
 
 const ACTION_LABEL: Record<string, string> = {
-  remind: "לנסח תזכורת אישית",
-  confirm: "לאשר",
-  offer_slot: "להציע לממתינים",
-  open_booking: "לפתוח את התור",
+  remind: "Draft a reminder",
+  confirm: "Approve",
+  offer_slot: "Offer to the waitlist",
+  open_booking: "Open booking",
 };
 
-/** The assistant's notes in the margin of today's page: what matters, each with one action. */
-export function MarginNotes({ onOpenBooking, onRemind, onChanged }: { onOpenBooking: (id: number) => void; onRemind: (id: number) => void; onChanged: () => void }) {
+/** The assistant's card on Today: what needs you, each with one action. */
+export function AssistantCard({ onOpenBooking, onRemind, onChanged }: { onOpenBooking: (id: number) => void; onRemind: (id: number) => void; onChanged: () => void }) {
   const [brief, setBrief] = useState<Brief | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
@@ -49,60 +49,71 @@ export function MarginNotes({ onOpenBooking, onRemind, onChanged }: { onOpenBook
         await api.post(`/api/pro/bookings/${it.booking_id}/status`, { status: "confirmed" });
         setBrief((b) => b && { ...b, items: b.items.filter((x) => x !== it) });
         onChanged();
-        setNote("אושר. הלקוח קיבל הודעה.");
+        setNote("Approved. The client got a message.");
       } else if (it.action === "offer_slot") {
         const r = await api.post<{ sent: number }>("/api/pro/waitlist/offer-today");
         setBrief((b) => b && { ...b, items: b.items.filter((x) => x !== it) });
-        setNote(r.sent ? `נשלחה הודעה ל-${r.sent} ממתינים.` : "אין כרגע ממתינים שמתאימים לזמן הפנוי.");
+        setNote(r.sent ? `Sent to ${r.sent} people on the waitlist.` : "Nobody on the waitlist fits the free time right now.");
       }
     } catch (e) {
       setNote(translateError(e));
     }
   }
 
+  const actionable = brief?.items.filter((it) => it.action !== "none" && (it.booking_id || it.action === "offer_slot")).length ?? 0;
+  const secondary = (it: BriefItem) => (it.action === "remind" || it.action === "confirm") && it.booking_id;
+
   return (
-    <aside className="margin" aria-labelledby="brief-h" aria-busy={busy}>
-      <div className="margin-head">
-        <h2 id="brief-h" className="small" style={{ color: "var(--cobalt)", fontWeight: 600 }}>
-          הערות העוזר להיום
-        </h2>
-        <button className="btn link ai small" onClick={() => load(true)} disabled={busy}>
-          {busy ? "קורא את היומן…" : "לקרוא שוב"}
-        </button>
+    <section className="panel sunset assistant" aria-labelledby="brief-h" aria-busy={busy}>
+      <div className="assistant-head">
+        <h2 id="brief-h">Your assistant</h2>
+        {brief && actionable > 0 && <span className="count">{actionable} for you</span>}
       </div>
       {!brief && !error && (
-        <div className="stack tight" aria-hidden>
+        <div className="assistant-item" aria-hidden>
           <div className="skeleton" style={{ height: 14, width: "80%" }} />
-          <div className="skeleton" style={{ height: 14, width: "92%" }} />
-          <div className="skeleton" style={{ height: 14, width: "70%" }} />
+          <div className="skeleton" style={{ height: 14, width: "60%" }} />
         </div>
       )}
-      {error ? <span className="small muted">{translateError(error)}</span> : null}
+      {error ? <p className="assistant-item">{translateError(error)}</p> : null}
       {brief && (
         <>
-          <p className="note" style={{ fontWeight: 500 }}>
-            {brief.headline}
-          </p>
-          {brief.items.length === 0 && <p className="note">אין כרגע משהו שדורש טיפול.</p>}
-          {brief.items.map((it, i) => (
-            <div key={i} className="note">
-              <span>{it.text}</span>
-              {it.action !== "none" && (it.booking_id || it.action === "offer_slot") && (
-                <button className="btn link ai small note-act" onClick={() => act(it)}>
-                  {ACTION_LABEL[it.action]}
-                </button>
-              )}
-            </div>
-          ))}
+          <p className="assistant-headline">{brief.headline}</p>
+          {brief.items.length === 0 && <p className="assistant-item">Nothing needs you right now.</p>}
+          {brief.items.map((it, i) => {
+            const can = it.action !== "none" && (it.booking_id || it.action === "offer_slot");
+            return (
+              <div key={i} className="assistant-item">
+                <b>{it.text}</b>
+                {can && (
+                  <div className="assistant-acts">
+                    <button className="btn sm" onClick={() => act(it)}>
+                      {ACTION_LABEL[it.action]}
+                    </button>
+                    {secondary(it) && (
+                      <button className="btn soft sm" onClick={() => onOpenBooking(it.booking_id!)}>
+                        Open booking
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {note && (
-            <span className="small" role="status" style={{ color: "var(--ink-2)" }}>
+            <span className="assistant-note" role="status">
               {note}
             </span>
           )}
-          {brief.source === "rules" && <span className="tiny muted">נכתב לפי כללים. עם מפתח Claude ההערות נכתבות מתוך הנתונים בשפה חופשית.</span>}
+          <div className="assistant-foot">
+            <span>{brief.source === "rules" ? "Ranked by rules. With a Claude key the assistant writes these from the data." : "Written from today's data."}</span>
+            <button className="btn link" onClick={() => load(true)} disabled={busy}>
+              {busy ? "Reading the day…" : "Refresh"}
+            </button>
+          </div>
         </>
       )}
-    </aside>
+    </section>
   );
 }
 
@@ -139,19 +150,19 @@ export function ReminderModal({ booking, onClose, onSent }: { booking: Booking; 
   }
 
   return (
-    <Modal title={`תזכורת אישית ל${booking.customer.name}`} onClose={onClose}>
+    <Modal title={`Reminder for ${booking.customer.name}`} onClose={onClose}>
       <p className="small muted">
         {booking.service.name} · {dayLong(booking.start)} {time(booking.start)}
       </p>
       {source === null && !error ? (
         <div className="ai-thinking" role="status">
           <div className="spinner" />
-          <span>העוזר כותב הודעה…</span>
+          <span>The assistant is writing…</span>
         </div>
       ) : (
         <div className="field">
           <label htmlFor="rem" className="row">
-            ההודעה {source === "ai" && <span className="ai-sign">נוסח ע״י העוזר</span>}
+            Message {source === "ai" && <span className="ai-sign">Drafted by the assistant</span>}
           </label>
           <textarea id="rem" className="input" rows={5} value={text} onChange={(e) => setText(e.target.value)} dir="auto" />
         </div>
@@ -159,10 +170,10 @@ export function ReminderModal({ booking, onClose, onSent }: { booking: Booking; 
       <ErrorText error={error} />
       <div className="row between">
         <button className="btn link ai" onClick={draft} disabled={source === null && !error}>
-          נוסח אחר
+          Try another draft
         </button>
         <button className="btn" onClick={send} disabled={busy || text.trim().length < 5}>
-          שליחה בוואטסאפ
+          Send on WhatsApp
         </button>
       </div>
     </Modal>

@@ -4,9 +4,9 @@ import { api } from "../api";
 import { translateError } from "@torim/shared";
 
 const DEMO = [
-  { email: "owner@barber.demo", label: "גל, בעל מספרה" },
-  { email: "dana@barber.demo", label: "דנה, ספרית (צוות)" },
-  { email: "owner@studio.demo", label: "נועה, סטודיו פילאטיס" },
+  { email: "owner@barber.demo", label: "Gal, barbershop owner" },
+  { email: "dana@barber.demo", label: "Dana, stylist (staff)" },
+  { email: "owner@studio.demo", label: "Noa, Pilates studio" },
 ];
 
 export default function Login({ onLogin, error }: { onLogin: (token: string) => void; error: string | null }) {
@@ -30,25 +30,30 @@ export default function Login({ onLogin, error }: { onLogin: (token: string) => 
 
   return (
     <div className="login-wrap">
-      <form className="login-card" onSubmit={submit}>
-        <div className="stack tight" style={{ paddingBottom: "0.75rem", borderBottom: "2px solid var(--ink)" }}>
-          <span className="small"><b style={{ letterSpacing: "0.06em" }}>TORIM</b> · לעסק</span>
-          <h1>כניסה ליומן</h1>
+      <form className="login-card panel" onSubmit={submit}>
+        <div className="stack tight">
+          <span className="brand">
+            <span className="logo-mark" aria-hidden>
+              t
+            </span>
+            torim
+          </span>
+          <h1>Sign in to your calendar</h1>
         </div>
         <div className="field">
-          <label htmlFor="email">אימייל</label>
-          <input id="email" className="input" dir="ltr" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <label htmlFor="email">Email</label>
+          <input id="email" className="input" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="field">
-          <label htmlFor="password">סיסמה</label>
-          <input id="password" className="input" dir="ltr" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <label htmlFor="password">Password</label>
+          <input id="password" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         {err && <div className="alert error" role="alert">{err}</div>}
-        <button className="btn block" disabled={busy}>
-          כניסה
+        <button className="btn cta block" disabled={busy}>
+          Sign in
         </button>
         <div className="stack tight">
-          <span className="tiny muted">חשבונות הדגמה, הסיסמה לכולם demo1234</span>
+          <span className="tiny muted">Demo accounts, all with the password demo1234</span>
           <div className="row wrap">
             {DEMO.map((d) => (
               <button type="button" key={d.email} className="chip" onClick={() => setEmail(d.email)}>
@@ -57,10 +62,10 @@ export default function Login({ onLogin, error }: { onLogin: (token: string) => 
             ))}
           </div>
         </div>
-        <div className="row between" style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.9rem" }}>
-          <span className="small muted">עדיין אין לכם חשבון?</span>
+        <div className="row between" style={{ borderTop: "1px solid var(--rule-2)", paddingTop: "0.9rem" }}>
+          <span className="small muted">New to TORIM?</span>
           <Link to="/signup" className="small">
-            פתיחת יומן לעסק חדש
+            Open a calendar for your business
           </Link>
         </div>
       </form>

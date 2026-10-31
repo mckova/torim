@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
 
-def first_open_slot(client, slug="gal-barbers", service_name="תספורת גבר", days_from=3):
+def first_open_slot(client, slug="gal-barbers", service_name="Men's haircut", days_from=3):
     page = client.get(f"/api/b/{slug}").json()
     svc = next(s for s in page["services"] if s["name"] == service_name)
     for i in range(days_from, days_from + 10):
@@ -24,7 +24,7 @@ def test_business_page(client):
     r = client.get("/api/b/gal-barbers")
     assert r.status_code == 200
     body = r.json()
-    assert body["business"]["name"] == "מספרת גל"
+    assert body["business"]["name"] == "Gal Barbers"
     assert len(body["providers"]) == 3 and len(body["services"]) == 5
 
 
@@ -64,7 +64,7 @@ def test_hold_blocks_others_and_is_honored(client):
 
 
 def test_requires_confirmation_flow(client, owner):
-    svc, slots = first_open_slot(client, service_name="צבע שורשים")
+    svc, slots = first_open_slot(client, service_name="Root colour")
     b = book(client, svc, slots[0]).json()
     assert b["status"] == "pending"
     r = client.post(f"/api/pro/bookings/{b['id']}/status", json={"status": "confirmed"}, headers=owner)
@@ -137,12 +137,12 @@ def test_staff_cannot_touch_others(client):
     h = {"Authorization": f"Bearer {tok}"}
     assert client.get("/api/pro/schedule", params={"provider_id": 1}, headers=h).status_code == 403
     rows = client.get("/api/pro/bookings", params={"start": "2020-01-01", "end": "2030-01-01"}, headers=h).json()
-    assert rows and all(r["provider"]["name"] == "דנה שגיא" for r in rows)
+    assert rows and all(r["provider"]["name"] == "Dana Sagi" for r in rows)
 
 
 def test_schedule_edit_changes_slots(client, owner):
     me = client.get("/api/pro/me", headers=owner).json()
-    svc = next(s for s in me["services"] if s["name"] == "עיצוב זקן")
+    svc = next(s for s in me["services"] if s["name"] == "Beard trim")
     d = date.today() + timedelta(days=5)
     client.post("/api/pro/overrides", json={"date": d.isoformat()}, headers=owner)  # owner (gal) off that day
     slots = client.get("/api/b/gal-barbers/slots", params={"service_id": svc["id"], "date": d.isoformat(), "provider_id": me["me"]["id"]}).json()

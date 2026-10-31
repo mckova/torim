@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/pro", tags=["business"])
 SLUG = re.compile(r"^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$")
 HHMM = re.compile(r"^([01][0-9]|2[0-3]):[0-5][0-9]$")
 COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
-PALETTE = ["#2f6f62", "#9a6a16", "#7a3e5c", "#5b6b2f", "#9b4a2c", "#4a5a78", "#6b5b4a", "#3e6b7a"]
+PALETTE = ["#e0336f", "#e8692c", "#c99400", "#b2457a", "#d9534f", "#a8588f", "#cf7a1f", "#8f4b6e"]  # the sunset family: rose, tangerine, butter and their neighbours
 
 # ---------------------------------------------------------------- rate limit for public AI setup
 _hits: dict[str, deque] = defaultdict(deque)
@@ -69,7 +69,7 @@ class SignupIn(BaseModel):
     description: str = Field(default="", max_length=400)
     address: str = ""
     phone: str = ""
-    accent_color: str = "#0f766e"
+    accent_color: str = "#e0336f"
     owner_name: str = Field(min_length=2, max_length=120)
     email: str = Field(min_length=5, max_length=160)
     password: str = Field(min_length=8, max_length=200)
@@ -82,7 +82,7 @@ class BusinessIn(BaseModel):
     description: str = Field(default="", max_length=400)
     address: str = ""
     phone: str = ""
-    accent_color: str = "#0f766e"
+    accent_color: str = "#e0336f"
     cancel_window_hours: int = Field(ge=0, le=168)
     slot_step: int = Field(ge=5, le=60)
 
@@ -156,9 +156,9 @@ def signup(body: SignupIn, db: Session = Depends(get_db)):
         description=body.description.strip(),
         address=body.address.strip(),
         phone=body.phone.strip(),
-        accent_color=body.accent_color if COLOR.match(body.accent_color) else "#0f766e",
+        accent_color=body.accent_color if COLOR.match(body.accent_color) else "#e0336f",
     )
-    owner = Provider(business=biz, name=body.owner_name.strip(), title="בעלים", email=email, password_hash=hash_password(body.password), role="owner", color=biz.accent_color)
+    owner = Provider(business=biz, name=body.owner_name.strip(), title="Owner", email=email, password_hash=hash_password(body.password), role="owner", color=biz.accent_color)
     _days(owner, body.days)
     db.add_all([biz, owner])
     for s in body.services:

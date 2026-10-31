@@ -25,10 +25,10 @@ export default function Customers() {
   }, [q]);
 
   return (
-    <div className="stack">
+    <div className="stack loose">
       <div className="page-head">
-        <h1>לקוחות</h1>
-        <input className="input" style={{ maxWidth: 280 }} placeholder="חיפוש לפי שם או טלפון" value={q} onChange={(e) => setQ(e.target.value)} />
+        <h1>Clients</h1>
+        <input className="input" style={{ maxWidth: 280 }} placeholder="Search by name or phone" aria-label="Search clients" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       <div className="card" style={{ overflowX: "auto" }}>
         {!rows ? (
@@ -37,13 +37,13 @@ export default function Customers() {
           <table className="table">
             <thead>
               <tr>
-                <th>שם</th>
-                <th>טלפון</th>
-                <th>ביקורים</th>
-                <th>לא הגיע</th>
-                <th>ביטולים</th>
-                <th>סה״כ</th>
-                <th>ביקור אחרון</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Visits</th>
+                <th>No-shows</th>
+                <th>Cancelled</th>
+                <th>Spent</th>
+                <th>Last visit</th>
               </tr>
             </thead>
             <tbody>
@@ -51,17 +51,17 @@ export default function Customers() {
                 <tr key={r.id} style={{ cursor: "pointer" }} onClick={() => api.get<NonNullable<typeof open>>(`/api/pro/customers/${r.id}`).then(setOpen)}>
                   <td>
                     <b>{r.name}</b>
-                    {r.visits >= 5 && <span className="chip accent" style={{ marginInlineStart: 6 }}>קבוע</span>}
-                    {r.no_shows >= 2 && <span className="chip no_show" style={{ marginInlineStart: 6 }}>סיכון</span>}
+                    {r.visits >= 5 && <span className="chip accent" style={{ marginInlineStart: 6 }}>Regular</span>}
+                    {r.no_shows >= 2 && <span className="chip no_show" style={{ marginInlineStart: 6 }}>Often misses</span>}
                   </td>
-                  <td dir="ltr" style={{ textAlign: "end" }}>
+                  <td className="num">
                     {phoneDisplay(r.phone)}
                   </td>
                   <td>{r.visits}</td>
                   <td>{r.no_shows}</td>
                   <td>{r.cancellations}</td>
                   <td>{money(r.spent)}</td>
-                  <td className="small muted">{r.last_visit ? dayLong(r.last_visit) : "עוד לא ביקר"}</td>
+                  <td className="small muted">{r.last_visit ? dayLong(r.last_visit) : "No visits yet"}</td>
                 </tr>
               ))}
             </tbody>
@@ -70,12 +70,12 @@ export default function Customers() {
       </div>
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)}>
-          <span className="muted small" dir="ltr">
+          <span className="muted small">
             {phoneDisplay(open.phone)}
           </span>
           <div className="stack tight">
             {open.bookings.map((b) => (
-              <div key={b.id} className="row between" style={{ borderBottom: "1px solid #f3f4f6", padding: "0.4rem 0" }}>
+              <div key={b.id} className="row between" style={{ borderBottom: "1px solid var(--rule-2)", padding: "0.4rem 0" }}>
                 <div className="stack tight">
                   <b className="small">{b.service.name}</b>
                   <span className="tiny muted">

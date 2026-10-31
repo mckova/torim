@@ -9,7 +9,7 @@ interface StaffRow extends Provider {
 }
 type StaffForm = { id?: number; name: string; title: string; email: string; password: string; color: string; service_ids: number[]; active: boolean; copy_hours: boolean };
 
-const DAY_SHORT = ["ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳", "א׳"];
+const DAY_SHORT = ["M", "T", "W", "T", "F", "S", "S"];
 const ORDER = [6, 0, 1, 2, 3, 4, 5];
 
 export default function Settings() {
@@ -41,7 +41,7 @@ export default function Settings() {
     try {
       await api.put("/api/pro/business", form);
       reload();
-      show("פרטי העסק נשמרו");
+      show("Business details saved");
     } catch (err) {
       setError(err);
     }
@@ -51,61 +51,61 @@ export default function Settings() {
     <div className="stack loose">
       <div className="page-head">
         <div>
-          <h1>העסק והצוות</h1>
-          <span className="small muted">איך העסק נראה ללקוחות, ומי עובד בו.</span>
+          <h1>Business and team</h1>
+          <span className="small muted">How the business looks to clients, and who works there.</span>
         </div>
       </div>
 
       <section className="card stack" aria-labelledby="share-h">
-        <h2 id="share-h">הקישור להזמנת תורים</h2>
-        <div className="input-group" dir="ltr">
-          <input className="input" readOnly value={publicUrl} aria-label="קישור לדף ההזמנות" onFocus={(e) => e.target.select()} />
+        <h2 id="share-h">Your booking link</h2>
+        <div className="input-group">
+          <input className="input" readOnly value={publicUrl} aria-label="Booking page link" onFocus={(e) => e.target.select()} />
           <button
             type="button"
             className="btn soft sm"
             style={{ borderRadius: 0 }}
-            onClick={() => navigator.clipboard?.writeText(publicUrl).then(() => show("הקישור הועתק"))}
+            onClick={() => navigator.clipboard?.writeText(publicUrl).then(() => show("Link copied"))}
           >
-            העתקה
+            Copy
           </button>
         </div>
-        <span className="hint small muted">שימו בביו באינסטגרם, בסטטוס בוואטסאפ ובגוגל. העוזר עונה ללקוחות שמגיעים משם בכל שעה.</span>
+        <span className="hint small muted">Put it in your Instagram bio, your WhatsApp status and on Google. The assistant answers clients who come from there at any hour.</span>
       </section>
 
       <form className="card stack" onSubmit={save} aria-labelledby="biz-h">
-        <h2 id="biz-h">פרטי העסק</h2>
+        <h2 id="biz-h">Business details</h2>
         <div className="grid two">
           <div className="field">
-            <label htmlFor="s-name">שם</label>
+            <label htmlFor="s-name">Name</label>
             <input id="s-name" className="input" required minLength={2} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div className="field">
-            <label htmlFor="s-phone">טלפון</label>
-            <input id="s-phone" className="input" dir="ltr" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <label htmlFor="s-phone">Phone</label>
+            <input id="s-phone" className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </div>
         </div>
         <div className="field">
-          <label htmlFor="s-addr">כתובת</label>
+          <label htmlFor="s-addr">Address</label>
           <input id="s-addr" className="input" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
         </div>
         <div className="field">
-          <label htmlFor="s-desc">תיאור לדף ההזמנות</label>
+          <label htmlFor="s-desc">Description for the booking page</label>
           <textarea id="s-desc" className="input" rows={2} maxLength={400} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         </div>
         <div className="grid two">
           <div className="field">
-            <label htmlFor="s-cancel">אפשר לבטל עד</label>
+            <label htmlFor="s-cancel">Clients can cancel up to</label>
             <div className="input-group">
               <input id="s-cancel" className="input num" type="number" min={0} max={168} value={form.cancel_window_hours} onChange={(e) => setForm({ ...form, cancel_window_hours: Number(e.target.value) })} />
-              <span className="addon">שעות לפני</span>
+              <span className="addon">hours before</span>
             </div>
           </div>
           <div className="field">
-            <label htmlFor="s-step">מרווח בין שעות מוצעות</label>
+            <label htmlFor="s-step">Offer a time every</label>
             <select id="s-step" className="input" value={form.slot_step} onChange={(e) => setForm({ ...form, slot_step: Number(e.target.value) })}>
               {[5, 10, 15, 20, 30, 60].map((m) => (
                 <option key={m} value={m}>
-                  כל {m} דקות
+                  {m} minutes
                 </option>
               ))}
             </select>
@@ -113,24 +113,24 @@ export default function Settings() {
         </div>
         <div className="row">
           <label htmlFor="s-color" className="label">
-            צבע המותג
+            Brand colour
           </label>
           <input id="s-color" type="color" value={form.accent_color} onChange={(e) => setForm({ ...form, accent_color: e.target.value })} />
         </div>
         <ErrorText error={error} />
         <button className="btn" style={{ alignSelf: "flex-start" }}>
-          שמירה
+          Save
         </button>
       </form>
 
       <section className="stack" aria-labelledby="team-h">
         <div className="section-title">
-          <h2 id="team-h">הצוות</h2>
+          <h2 id="team-h">Team</h2>
           <button
             className="btn sm"
             onClick={() => setEdit({ name: "", title: "", email: "", password: "", color: "", service_ids: data.services.map((s) => s.id), active: true, copy_hours: true })}
           >
-            הוספת איש צוות
+            Add a team member
           </button>
         </div>
         {!staff ? (
@@ -142,19 +142,19 @@ export default function Settings() {
           <div className="grid two">
             {staff.map((p) => (
               <div key={p.id} className="card row" style={{ opacity: p.active ? 1 : 0.55, alignItems: "flex-start" }}>
-                <div className="avatar sm" style={{ background: p.color }} aria-hidden>
+                <div className="avatar sm" style={{ background: `linear-gradient(135deg, color-mix(in srgb, ${p.color} 35%, white), ${p.color})` }} aria-hidden>
                   {p.name.slice(0, 1)}
                 </div>
                 <div className="grow stack tight">
                   <div className="row wrap">
                     <b>{p.name}</b>
-                    {p.role === "owner" && <span className="chip accent">בעלים</span>}
-                    {!p.active && <span className="chip cancelled">מושבת</span>}
+                    {p.role === "owner" && <span className="chip accent">Owner</span>}
+                    {!p.active && <span className="chip cancelled">Off</span>}
                   </div>
                   <span className="small muted">{p.title || p.email}</span>
-                  <div className="row" aria-label="ימי עבודה">
+                  <div className="row" aria-label="Working days">
                     {ORDER.map((d) => (
-                      <span key={d} className="tiny" style={{ color: p.weekdays.includes(d) ? "var(--ink)" : "#cbd5e1", fontWeight: 600 }}>
+                      <span key={d} className="tiny" style={{ color: p.weekdays.includes(d) ? "var(--ink)" : "#d9c6d0", fontWeight: 600 }}>
                         {DAY_SHORT[d]}
                       </span>
                     ))}
@@ -164,7 +164,7 @@ export default function Settings() {
                   className="btn ghost sm"
                   onClick={() => setEdit({ id: p.id, name: p.name, title: p.title, email: p.email, password: "", color: p.color, service_ids: p.service_ids, active: p.active, copy_hours: false })}
                 >
-                  עריכה
+                  Edit
                 </button>
               </div>
             ))}
@@ -203,38 +203,38 @@ function StaffModal({ value, isOwnerRow, onClose, onSaved }: { value: StaffForm;
       const body = { ...f, password: f.password || null };
       if (isNew) await api.post("/api/pro/staff", body);
       else await api.put(`/api/pro/staff/${f.id}`, body);
-      onSaved(isNew ? `${f.name} נוסף/ה לצוות. אפשר להתחבר עם האימייל והסיסמה.` : "נשמר");
+      onSaved(isNew ? `${f.name} joined the team and can sign in with that email and password.` : "Saved");
     } catch (err) {
       setError(err);
     }
   }
 
   return (
-    <Modal title={isNew ? "איש צוות חדש" : f.name} onClose={onClose}>
+    <Modal title={isNew ? "New team member" : f.name} onClose={onClose}>
       <form className="stack" onSubmit={submit}>
         <div className="grid two">
           <div className="field">
-            <label htmlFor="st-name">שם</label>
+            <label htmlFor="st-name">Name</label>
             <input id="st-name" className="input" required minLength={2} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
           </div>
           <div className="field">
-            <label htmlFor="st-title">תפקיד</label>
-            <input id="st-title" className="input" placeholder="למשל: ספרית" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+            <label htmlFor="st-title">Role</label>
+            <input id="st-title" className="input" placeholder="For example: stylist" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
           </div>
         </div>
         <div className="grid two">
           <div className="field">
-            <label htmlFor="st-email">אימייל לכניסה</label>
-            <input id="st-email" className="input" dir="ltr" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+            <label htmlFor="st-email">Sign-in email</label>
+            <input id="st-email" className="input" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
           </div>
           <div className="field">
-            <label htmlFor="st-pw">{isNew ? "סיסמה" : "סיסמה חדשה (לא חובה)"}</label>
-            <input id="st-pw" className="input" dir="ltr" type="password" minLength={8} required={isNew} autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} />
+            <label htmlFor="st-pw">{isNew ? "Password" : "New password (optional)"}</label>
+            <input id="st-pw" className="input" type="password" minLength={8} required={isNew} autoComplete="new-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} />
           </div>
         </div>
         <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
           <legend className="label" style={{ marginBottom: "0.4rem" }}>
-            שירותים שהוא/היא נותנים
+            Services they offer
           </legend>
           <div className="row wrap">
             {data.services.map((s) => {
@@ -255,23 +255,23 @@ function StaffModal({ value, isOwnerRow, onClose, onSaved }: { value: StaffForm;
         </fieldset>
         {isNew ? (
           <label className="row small">
-            <input type="checkbox" checked={f.copy_hours} onChange={(e) => setF({ ...f, copy_hours: e.target.checked })} /> להעתיק את שעות העבודה שלי (אפשר לשנות אחר כך במסך שעות עבודה)
+            <input type="checkbox" checked={f.copy_hours} onChange={(e) => setF({ ...f, copy_hours: e.target.checked })} /> Copy my working hours (you can change them later under Working hours)
           </label>
         ) : (
           !isOwnerRow && (
             <label className="row small">
-              <input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} /> פעיל/ה (מי שמושבת לא מופיע ללקוחות ולא יכול להתחבר)
+              <input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} /> Active (someone switched off is hidden from clients and can't sign in)
             </label>
           )
         )}
         <div className="row">
           <label htmlFor="st-color" className="label">
-            צבע ביומן
+            Calendar colour
           </label>
-          <input id="st-color" type="color" value={f.color || "#0f766e"} onChange={(e) => setF({ ...f, color: e.target.value })} />
+          <input id="st-color" type="color" value={f.color || "#e0336f"} onChange={(e) => setF({ ...f, color: e.target.value })} />
         </div>
         <ErrorText error={error} />
-        <button className="btn block">{isNew ? "הוספה לצוות" : "שמירה"}</button>
+        <button className="btn block">{isNew ? "Add to the team" : "Save"}</button>
       </form>
     </Modal>
   );

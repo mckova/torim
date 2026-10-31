@@ -21,14 +21,14 @@ from sqlalchemy.orm import Session
 from ..models import Booking, Business, now_utc
 
 FEATURES = [
-    ("prior_no_show_rate", "היסטוריה של אי-הגעה"),
-    ("first_visit", "לקוח חדש"),
-    ("log_visits", "לקוח קבוע"),
-    ("lead_days", "הוזמן הרבה זמן מראש"),
-    ("evening", "שעת ערב"),
-    ("morning", "שעת בוקר מוקדמת"),
-    ("online", "הוזמן אונליין"),
-    ("long_service", "שירות ארוך"),
+    ("prior_no_show_rate", "missed visits before"),
+    ("first_visit", "first visit"),
+    ("log_visits", "regular"),
+    ("lead_days", "booked long in advance"),
+    ("evening", "evening slot"),
+    ("morning", "early morning"),
+    ("online", "booked online"),
+    ("long_service", "long service"),
 ]
 
 
