@@ -30,10 +30,17 @@ function BookingCard({ b }: { b: Booking }) {
 
 export default function Assistant({ slug, businessName }: { slug: string; businessName: string }) {
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [demo, setDemo] = useState(false);
   const conv = useRef<string | null>(null);
 
   useEffect(() => {
-    api.get<{ enabled: boolean }>("/api/ai/status").then((s) => setEnabled(s.enabled)).catch(() => setEnabled(false));
+    api
+      .get<{ enabled: boolean; demo?: boolean }>("/api/ai/status")
+      .then((s) => {
+        setEnabled(s.enabled);
+        setDemo(!!s.demo);
+      })
+      .catch(() => setEnabled(false));
   }, []);
 
   if (enabled === null) return <div className="spinner" />;
@@ -49,7 +56,7 @@ export default function Assistant({ slug, businessName }: { slug: string; busine
     <div className="stack">
       <div className="row between">
         <span className="ai-sign">{businessName} assistant</span>
-        <span className="tiny muted">Books, moves and cancels from what you write</span>
+        <span className="tiny muted">{demo ? "Demo mode: answers come from the live calendar, no AI model" : "Books, moves and cancels from what you write"}</span>
       </div>
       <ChatPanel
         height="62vh"

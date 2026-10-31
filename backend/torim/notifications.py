@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from .models import Booking, Notification, now_utc
 
 log = logging.getLogger("torim.notify")
-PUBLIC_URL = os.environ.get("TORIM_PUBLIC_URL", "http://localhost:5173")
+PUBLIC_URL = os.environ.get("TORIM_PUBLIC_URL") or os.environ.get("RENDER_EXTERNAL_URL") or "http://localhost:5173"
 
 REMINDERS = (("reminder_24h", timedelta(hours=24)), ("reminder_2h", timedelta(hours=2)))
 

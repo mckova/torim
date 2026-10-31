@@ -126,6 +126,15 @@ the provider app work, and the assistant tab says it is off). The database is
 selected with `TORIM_DATABASE_URL`: SQLite by default for local development,
 PostgreSQL in `compose.yaml`.
 
+### Deploy on Render
+
+`render.yaml` describes one Docker web service: both apps and the API in a single
+container, demo data seeded on boot (`TORIM_SEED=1`). Create a Blueprint from the
+repo. Link an environment group with `ANTHROPIC_API_KEY` to turn the assistants on;
+without a key they answer in labelled demo mode, from the live calendar (free
+times, prices, hours, bookings, numbers). Use `TORIM_DATABASE_URL` (or
+`DATABASE_URL`) to point at a Render Postgres if data should survive deploys.
+
 API docs: http://localhost:8000/docs
 
 ## Configuration

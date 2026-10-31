@@ -8,7 +8,7 @@ function ctor(): (new () => Recognition) | null {
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
-/** Hebrew speech-to-text through the browser's speech recognition (Chrome, Edge, Safari). */
+/** Speech-to-text through the browser's speech recognition (Chrome, Edge, Safari). */
 export function useDictation(onText: (text: string, final: boolean) => void, lang = "en-US") {
   const [listening, setListening] = useState(false);
   const rec = useRef<Recognition | null>(null);
@@ -16,7 +16,12 @@ export function useDictation(onText: (text: string, final: boolean) => void, lan
   cb.current = onText;
   const supported = typeof window !== "undefined" && !!ctor();
 
-  useEffect(() => () => rec.current?.abort?.(), []);
+  useEffect(
+    () => () => {
+      rec.current?.abort?.();
+    },
+    [],
+  );
 
   function start() {
     const C = ctor();

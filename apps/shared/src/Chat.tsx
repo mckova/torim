@@ -32,7 +32,9 @@ export function ChatPanel({
     if (final) submit(text);
   });
 
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), [items, busy]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [items, busy]);
 
   async function submit(text: string) {
     if (!text.trim() || busy) return;

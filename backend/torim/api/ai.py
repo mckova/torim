@@ -36,7 +36,7 @@ class InboundIn(BaseModel):
 
 
 def _need_ai():
-    if not engine.enabled():
+    if not engine.available():
         raise HTTPException(503, "AI is not configured on this server (set ANTHROPIC_API_KEY)")
 
 
@@ -54,7 +54,7 @@ def _ai_error(exc: Exception):
 
 @router.get("/ai/status")
 def status():
-    return {"enabled": engine.enabled(), "model": engine.MODEL}
+    return {"enabled": engine.available(), "demo": not engine.enabled(), "model": engine.MODEL if engine.enabled() else "demo"}
 
 
 @router.post("/b/{slug}/assistant")
@@ -76,7 +76,7 @@ def receptionist_chat(slug: str, body: ChatIn, authorization: str | None = Heade
         result = rc.Receptionist(db, b, conv).turn(body.message)
     except Exception as exc:
         _ai_error(exc)
-    return {"conversation_id": conv.uid, "reply": result.reply, "actions": result.actions, "tools_used": result.tool_calls}
+    return {"conversation_id": conv.uid, "reply": result.reply, "actions": result.actions, "tools_used": result.tool_calls, "demo": not engine.enabled()}
 
 
 @router.post("/webhooks/inbound")
@@ -113,7 +113,7 @@ def copilot_chat(body: ChatIn, claims: dict = ProviderAuth, db: Session = Depend
         result = cp.Copilot(db, me, conv).turn(body.message)
     except Exception as exc:
         _ai_error(exc)
-    return {"conversation_id": conv.uid, "reply": result.reply, "actions": result.actions, "tools_used": result.tool_calls}
+    return {"conversation_id": conv.uid, "reply": result.reply, "actions": result.actions, "tools_used": result.tool_calls, "demo": not engine.enabled()}
 
 
 @router.get("/pro/risk")

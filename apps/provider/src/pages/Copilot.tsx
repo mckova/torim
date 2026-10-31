@@ -27,9 +27,13 @@ const TOOL_LABEL: Record<string, string> = {
 export default function Copilot() {
   const { data } = useMe();
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [demo, setDemo] = useState(false);
   const conv = useRef<string | null>(null);
   useEffect(() => {
-    api.get<{ enabled: boolean }>("/api/ai/status").then((s) => setEnabled(s.enabled));
+    api.get<{ enabled: boolean; demo?: boolean }>("/api/ai/status").then((s) => {
+      setEnabled(s.enabled);
+      setDemo(!!s.demo);
+    });
   }, []);
 
   return (
@@ -37,9 +41,13 @@ export default function Copilot() {
       <div className="page-head">
         <div>
           <h1>Assistant</h1>
-          <span className="small muted">Ask in your own words. The assistant reads the calendar and the numbers live, and can book, approve and block time for you.</span>
+          <span className="small muted">
+            {demo
+              ? "Demo mode: answers come straight from your live calendar by simple rules, with no AI model. With a Claude key connected it understands open-ended questions and can act for you."
+              : "Ask in your own words. The assistant reads the calendar and the numbers live, and can book, approve and block time for you."}
+          </span>
         </div>
-        <span className="ai-sign">Claude Opus 5.5</span>
+        <span className="ai-sign">{demo ? "Demo mode" : "Claude Opus 5.5"}</span>
       </div>
       {enabled === false ? (
         <section className="copilot-off panel">
@@ -60,13 +68,17 @@ export default function Copilot() {
         <ChatPanel
           height="70dvh"
           intro={`Hi ${data.me.name.split(" ")[0]}, what do you need today?`}
-          suggestions={[
-            "Who might not show up this week, and what should I do?",
-            "How is this month doing against last month?",
-            "When are my quiet hours, and how do I fill them?",
-            "Block tomorrow from 14:00 to 16:00",
-            "Approve all of tomorrow's pending requests",
-          ]}
+          suggestions={
+            demo
+              ? ["How's today?", "Who might not show up this week?", "How are we doing this week?", "Who is on the waitlist?", "Anything waiting for approval?"]
+              : [
+                  "Who might not show up this week, and what should I do?",
+                  "How is this month doing against last month?",
+                  "When are my quiet hours, and how do I fill them?",
+                  "Block tomorrow from 14:00 to 16:00",
+                  "Approve all of tomorrow's pending requests",
+                ]
+          }
           placeholder="For example: who were my most loyal clients this month?"
           send={async (text) => {
             const r = await api.post<Reply>("/api/pro/copilot", { message: text, conversation_id: conv.current });

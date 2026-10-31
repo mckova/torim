@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from .. import booking as bk
 from .. import serialize as ser
 from ..models import AiConversation, Booking, Business, Customer, Service, now_utc
-from .engine import Tool, TurnResult, run_turn
+from .engine import Tool, TurnResult, enabled, run_turn
 
 NULL_INT = {"type": ["integer", "null"]}
 NULL_STR = {"type": ["string", "null"]}
@@ -221,6 +221,10 @@ class Receptionist:
         ]
 
     def turn(self, text: str) -> TurnResult:
+        if not enabled():
+            from . import demo
+
+            return demo.receptionist_turn(self, text)
         now = now_utc().astimezone(self.tz)
         stamped = f"[{now.strftime('%A %Y-%m-%d %H:%M')} Israel time]\n{text}"
         result = run_turn(

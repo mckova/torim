@@ -7,7 +7,15 @@ from sqlalchemy import DateTime, create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy.types import TypeDecorator
 
-DATABASE_URL = os.environ.get("TORIM_DATABASE_URL", "sqlite:///./torim.db")
+def _normalize(url: str) -> str:
+    """Hosts hand out postgres:// or postgresql:// URLs; SQLAlchemy needs the driver named."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+DATABASE_URL = _normalize(os.environ.get("TORIM_DATABASE_URL") or os.environ.get("DATABASE_URL") or "sqlite:///./torim.db")
 
 
 class UTCDateTime(TypeDecorator):

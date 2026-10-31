@@ -1,0 +1,17 @@
+# One container: both apps and the API, demo data seeded on boot.
+# Without a database section the demo uses SQLite inside the container and is
+# re-seeded on every deploy, so it always starts clean. To keep data between
+# deploys, add a Render Postgres and set TORIM_DATABASE_URL to its internal URL.
+services:
+  - type: web
+    name: torim
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/businesses
+    envVars:
+      - key: TORIM_SEED
+        value: "1"
+      - key: TORIM_SECRET
+        generateValue: true
+      # Add the shared environment group that holds ANTHROPIC_API_KEY (Dashboard, Environment
+      # Groups, then link it to this service). Without a key the assistants run in demo mode.

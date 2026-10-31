@@ -67,11 +67,35 @@ def service_id(client, name):
     return next(s["id"] for s in client.get("/api/b/gal-barbers").json()["services"] if s["name"] == name)
 
 
-def test_ai_disabled_without_key(client):
+def test_ai_off_when_demo_disabled(client, monkeypatch):
     engine.set_client(None)
+    monkeypatch.setenv("TORIM_AI_DEMO", "0")
     assert client.get("/api/ai/status").json()["enabled"] is False
-    r = client.post("/api/b/gal-barbers/assistant", json={"message": "שלום"})
+    r = client.post("/api/b/gal-barbers/assistant", json={"message": "hello"})
     assert r.status_code == 503
+
+
+def test_demo_mode_answers_and_books_without_key(client):
+    engine.set_client(None)
+    st = client.get("/api/ai/status").json()
+    assert st["enabled"] and st["demo"]
+    ask = lambda m, cid=None: client.post("/api/b/gal-barbers/assistant", json={"message": m, "conversation_id": cid}).json()
+    r = ask("what are your hours?")
+    assert r["demo"] and "open" in r["reply"].lower()
+    assert "₪" in ask("how much is a haircut?")["reply"]
+    r = ask("Can I get a men's haircut tomorrow?")
+    cid = r["conversation_id"]
+    assert "Which one works" in r["reply"]
+    r = ask("first", cid)
+    assert "name and mobile" in r["reply"]
+    r = ask("Dana Test, 052-7654321", cid)
+    assert r["actions"] and r["actions"][0]["booking"]["status"] in ("confirmed", "pending")
+
+
+def test_demo_copilot_reads_the_calendar(client, owner):
+    engine.set_client(None)
+    r = client.post("/api/pro/copilot", json={"message": "how are we doing this week?"}, headers=owner)
+    assert r.status_code == 200 and "bookings" in r.json()["reply"]
 
 
 def test_receptionist_books_through_tools(client, fake):

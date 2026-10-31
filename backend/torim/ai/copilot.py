@@ -20,7 +20,7 @@ from .. import booking as bk
 from .. import serialize as ser
 from ..models import AiConversation, Booking, Customer, Provider, Service, TimeOff, WaitlistEntry, now_utc
 from . import risk
-from .engine import Tool, TurnResult, run_turn
+from .engine import Tool, TurnResult, enabled, run_turn
 
 NULL_INT = {"type": ["integer", "null"]}
 NULL_STR = {"type": ["string", "null"]}
@@ -240,6 +240,10 @@ Staff:
 """
 
     def turn(self, text: str) -> TurnResult:
+        if not enabled():
+            from . import demo
+
+            return demo.copilot_turn(self, text)
         now = now_utc().astimezone(self.tz)
         result = run_turn(
             system=self.system(),

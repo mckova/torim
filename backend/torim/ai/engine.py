@@ -58,7 +58,15 @@ def set_client(client) -> None:
 
 
 def enabled() -> bool:
+    """True when a model is configured."""
     return get_client() is not None
+
+
+def available() -> bool:
+    """True when the assistants can answer at all: a model, or the offline demo mode."""
+    from . import demo
+
+    return enabled() or demo.allowed()
 
 
 @dataclass

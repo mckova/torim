@@ -16,5 +16,7 @@ ENV TORIM_DATABASE_URL=sqlite:////data/torim.db \
     TORIM_SEED=1
 VOLUME /data
 WORKDIR /app/backend
+ENV PORT=8000
 EXPOSE 8000
-CMD ["uvicorn", "torim.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Hosts such as Render pass the port in $PORT.
+CMD ["sh", "-c", "exec uvicorn torim.main:app --host 0.0.0.0 --port ${PORT}"]
