@@ -1,0 +1,13 @@
+services:
+  torim:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      TORIM_SECRET: change-me
+      TORIM_PUBLIC_URL: http://localhost:8000
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # TORIM_CHANNEL: webhook
+      # TORIM_WEBHOOK_URL: https://your-n8n-or-whatsapp-gateway/hook
+    volumes: ["torim-data:/data"]
+volumes:
+  torim-data:

@@ -1,0 +1,8 @@
+node_modules
+**/node_modules
+**/dist
+.venv
+**/__pycache__
+**/*.db*
+.git
+docs/screenshots

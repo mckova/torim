@@ -1,0 +1,11 @@
+{
+  "name": "torim",
+  "private": true,
+  "workspaces": ["apps/client", "apps/provider", "apps/shared"],
+  "scripts": {
+    "dev:client": "npm -w apps/client run dev",
+    "dev:provider": "npm -w apps/provider run dev",
+    "build": "npm -w apps/client run build && npm -w apps/provider run build",
+    "typecheck": "npm -w apps/client run typecheck && npm -w apps/provider run typecheck"
+  }
+}
