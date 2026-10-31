@@ -1,8 +1,23 @@
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: torim
+      POSTGRES_PASSWORD: torim
+      POSTGRES_DB: torim
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U torim"]
+      interval: 3s
+      retries: 20
   torim:
     build: .
     ports: ["8000:8000"]
+    depends_on:
+      db: { condition: service_healthy }
     environment:
+      # Postgres by default. Remove this line to fall back to SQLite in /data.
+      TORIM_DATABASE_URL: postgresql+psycopg://torim:torim@db:5432/torim
       TORIM_SECRET: change-me
       TORIM_PUBLIC_URL: http://localhost:8000
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -10,4 +25,5 @@ services:
       # TORIM_WEBHOOK_URL: https://your-n8n-or-whatsapp-gateway/hook
     volumes: ["torim-data:/data"]
 volumes:
+  pgdata:
   torim-data:

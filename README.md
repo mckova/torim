@@ -114,12 +114,17 @@ make dev-provider   # provider app on :5174/pro/
 make test           # 36 backend tests (incl. agent loops with a scripted client) + typecheck
 ```
 
-Or everything in one container: `docker compose up --build`, then open
+Or everything together (app plus PostgreSQL): `docker compose up --build`, then open
 http://localhost:8000 (client) and http://localhost:8000/pro (provider).
 
 Demo logins (password `demo1234`): `owner@barber.demo` (owner),
 `dana@barber.demo` (staff), `owner@studio.demo` (pilates studio with group
 classes). In demo mode the phone sign-in code is shown on screen.
+
+Set `ANTHROPIC_API_KEY` to turn the assistant on (without it, booking, queue and
+the provider app work, and the assistant tab says it is off). The database is
+selected with `TORIM_DATABASE_URL`: SQLite by default for local development,
+PostgreSQL in `compose.yaml`.
 
 API docs: http://localhost:8000/docs
 
